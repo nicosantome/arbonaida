@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Arbonaida | Reservations</title>
+</head>
+<body>
+  <header>
+    <img style= 'width:100px' src="static/images/logo.jpg" alt="Arbonaida Logo">
+    <h1>Arbonaida</h1>
+  </header>
+  <div class='images'></div>
+  <main>
+    <h2>Reservations</h2>
+    <div>
+      <label for="quantity">Number of people:</label>
+      <input type="number" id="quantity" name="quantity" min="2" max="6">
+    </div>
+    <div>
+      <label for="date">Date:</label>
+      <input type="date" id="date" name="date">
+    </div>
+    <div>
+      <label for="hour">Time:</label>
+      <select id="hour" name="hour">
+        <option value="08:00">8:00 AM</option>
+        <option value="12:00">12:00 PM</option>
+        <!-- Add more options as needed -->
+      </select>
+    </div>
+    <button type="button">Reserve</button>
+  </main>
+  <script src="/static/js/home.js"></script>
+</body>
+</html>

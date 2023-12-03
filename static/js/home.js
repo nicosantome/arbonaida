@@ -1,34 +1,62 @@
 window.onload = function() {
-    // Get current date
-    var currentDate = new Date();
-    var currentHour = currentDate.getHours();
-    var currentDay = currentDate.getDate();
-    var currentMonth = currentDate.getMonth() + 1; // Adding 1 since months go from 0 to 11
+    var dateInput = document.getElementById('date');
 
-    if (currentHour >= 22) {
-        // If it's past 10 PM, move to the next day
-        currentDay = currentDay + 1;
-        // Logic for the next month if needed
+    function formatDate(date) {
+        return (
+            date.getFullYear() +
+            '-' +
+            ((date.getMonth() + 1) < 10 ? '0' : '') +
+            (date.getMonth() + 1) +
+            '-' +
+            (date.getDate() < 10 ? '0' : '') +
+            date.getDate()
+        );
     }
 
-    // Format the date in the desired format (example: '28-10-2023')
-    var formattedDate = currentDay + '-' + currentMonth + '-' + currentDate.getFullYear();
+    function handleDateChange() {
+        var currentDate = new Date();
+        var currentHour = currentDate.getHours();
 
-    // Make a fetch request to the server with the current date
-    fetch('/getReservationData', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ date: formattedDate }) // Send the date to the server
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Handle the received data to display available hours in the dropdown
-        // Update the dropdown with available hours based on the received data
-    })
-    .catch(error => {
-        // Handle any error in the fetch request
-        console.error('Error fetching data:', error);
-    });
-}
+        if (currentHour >= 22) {
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        var formattedDate = formatDate(currentDate);
+        dateInput.value = formattedDate;
+
+        // Fetch data for the selected date
+        fetchReservationData(formattedDate);
+    }
+
+    function fetchReservationData(dateValue) {
+      console.log('Fetching')
+        fetch('/getReservationData', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(dateValue)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        })
+        .then(data => {
+            // Handle the received data (document exists for the given date)
+            console.log('Reservation data:', data);
+            // Update your UI or take actions based on the received data
+        })
+        .catch(error => {
+            // Handle errors or non-existent document for the date
+            console.error('Error fetching or no data for the date:', error);
+        });
+    }
+
+    handleDateChange();
+  dateInput.addEventListener('change', function() {
+            fetchReservationData(formattedDate); // Se ejecutará cada vez que cambies la fecha
+      });
+  };
+

@@ -1,0 +1,81 @@
+Frontend
+	base.html
+	admin.html
+		-Create bkg
+		-Modify bkg
+		-Delete bkg
+	booking.html
+		-form bkg data
+		-form client data (modal?)
+	style.css
+	js
+
+Backend
+	app.py
+		Rutas para:
+			-Bkg (home)
+			-Admin
+	database.py
+	    clientDB
+		    -Función para crear client entries
+			    objeto(movil as uid, nombre, historial de reservas y comment)
+	    availabilityDB
+		    -Función para crear availability entries (arg: date)
+			    -Excemptions (Lunes? Festivos?) *Config file
+
+		    -Función para comprobar availability(args: people, date, time, indoor/outdoor)
+		    -Función para modificar availability
+		bookingDB
+		    -Función para crear booking entry(args: people, date, time, indoor/outdoor, cliente)
+    config.py
+        Hora apertura, cierre (local y cocina)
+        Dias abiertos y cerrados, vacaciones.
+
+
+
+- form input creates an object
+	People, date, time, indoor/outdoor.
+
+
+
+
+
+
+
+
+
+
+
+- Integración Whatsapp
+    crear file, clase y funciones para enviar mensajes
+
+- Integracion email
+    crear función para enviar email de confirmación con link para modificar o eliminar reserva
+
+- Integracion Google places
+    Integrar para coger los horarios y días de Google. Dejar opción para modificar desde admin
+
+- Ver con Sergio
+    - Horarios de apertura/cierre de local (indoor y outdoor)
+    - Horarios de apertura/cierre de cocina
+    - Duración de reserva (Posibilidad de reserva reducida)
+    - Configuraciones de mesas
+
+
+
+Steps
+
+-Frontend
+    -Selects amount of people
+    -Selects date
+    -Selects indoor / outdoor
+
+    -Displays posibilities
+
+- Backend
+    Search availability record for date
+        if doesn't exist -> creates
+        if exists loop to find table and book it
+        if no table try different config
+
+

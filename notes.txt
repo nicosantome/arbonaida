@@ -1,0 +1,82 @@
+# M,X,J
+# Horario comercial 13 - 16:00 // 19 - 23:59 Terraza?
+# Horario cocina 13 - 15:30 // 20 - 23:00
+# Lunch
+# 13:00 [True, True, True, True, True, True, True, True, True, True, True, True, True, True] 16:30
+# Dinner (indoor)
+# 20:00 [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True] 23:59
+#
+#
+# V, S
+# Horario comercial 13 - 1:00 +1
+# Horario cocina 13 - 15:30 Viernes y 16:00 Sabado / 20 - 23:00
+# Lunch
+# 13:00 [True, True, True, True, True, True, True, True, True, True, True, True, True, True] 16:30
+# Dinner (indoor)
+# 20:00 [True, True, True, True, True, True, True, True, True, True, True, True, True, True, True, True] 23:59
+#
+# D
+# Horario comercial 13 - 17:00 preguntar a Sergio
+# Horario cocina 13 - 16:00
+# Lunch
+# 13:00 [True, True, True, True, True, True, True, True, True, True, True, True, True, True] 16:30
+
+# T1: 4p
+# T2: 2p (3p)
+# T3: 2p
+#
+#
+# 2da sala
+# T4: 5p
+# T5: 2p (3p)
+#
+# Posible juntar T4 + T5
+#
+# T6: 2p
+# T7: 2p
+#
+# Posible juntar T6 + T7
+#
+#
+# 3er sala
+# T8: 4p (5p)
+# T9: 2p
+#
+# Posible juntar T8 + T9
+#
+# T10: 4p
+#
+# T8 + T9 + T10: 12p
+
+Hours:
+Saturday	1PM–1AM
+Sunday	1–5PM
+Monday	Closed
+Tuesday	    1–4PM, 7PM–12AM
+Wednesday	1–4PM, 7PM–12AM
+Thursday	1–4PM, 7PM–12AM
+Friday	1PM–1AM
+
+regla para usuario accede Lunes/día cerrado:
+    -Defaultea al siguiente día abierto 13:00
+
+regla para usuario accede Martes/Miercoles/Jueves/Viernes/Sabado:
+    -Antes de las 13 = Defaultea al mismo día 13
+    -Después de las 13 antes de las 20:00 = Defaultea al mismo día 20
+    -Despues de las 20 = Defaultea al día siguiente 13
+
+regla para usuario accede Domingo
+      -Antes de las 13 = Defaultea al mismo día 13
+      -Después de las 13 = Defaultea a próx día abierto a las 13/Martes
+
+
+
+Comida MXJ = 12 intervalos de 15mins Desde 13:00 hasta 16:00
+[True, True, True, True, True, True, True, True, True, True, True, True]
+
+Comida VS
+Comida D
+
+Cena MXJ
+Cena VS
+

@@ -1,0 +1,80 @@
+body {
+            background-color: #2c3e50; /* Color oscuro de fondo para el body */
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .wrapper {
+            width: 70%; /* Ancho del wrapper del contenido */
+            height: 100vh; /* Altura del wrapper del contenido */
+            margin: 0 auto; /* Centrar el contenido horizontalmente */
+            background-image: url('/static/images/frente.jpg'); /* Ruta de tu imagen de fondo */
+            background-size: cover;
+            background-position: center;
+            filter: brightness(80%); /* Filtro blanco sobre la imagen de fondo */
+            padding: 20px;
+            border-radius: 10px;
+            display: flex; /* Utilizamos flexbox para alinear verticalmente el contenido */
+            justify-content: center; /* Centramos el contenido horizontalmente */
+            align-items: center; /* Centramos el contenido verticalmente */
+        }
+
+        .main {
+            width: 60%; /* Ancho del contenedor principal */
+            height: 50%; /* Altura del contenedor principal, el 50% del .wrapper */
+            background-color: rgba(255, 255, 255, 0.8); /* Fondo semi-transparente */
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .guest-list {
+            list-style: none;
+            padding: 0;
+            text-align: center;
+        }
+
+        .guest-list li {
+            display: inline-block;
+            margin: 0 10px;
+        }
+
+        .calendar {
+            background-color: #fff; /* Color de fondo para el calendario */
+            height: 300px; /* Altura del calendario, ajusta según tus necesidades */
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        .service {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* Estilos para los botones de cantidad de personas */
+        .guest-list button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        /* Estilos para el título "Cuantos sois?" */
+        .title {
+            text-align: center;
+            color: #fff;
+        }
+
+
+
+
+
+
+

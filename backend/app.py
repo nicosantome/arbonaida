@@ -5,7 +5,7 @@ app = Flask(__name__, template_folder='../frontend/templates', static_folder='..
 
 @app.route('/', methods=['GET'])
 def new_booking():
-    return render_template('new_booking.html')
+    return render_template('home.html')
 
 @app.route('/create_booking', methods=['POST'])
 def create_booking():

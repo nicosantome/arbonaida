@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arbonaida - Reservas</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='/css/date-picker.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='/css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/date-picker.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
 
     <style>
@@ -43,10 +43,7 @@
         <div class="fechas">
              <h2 class="subtitle">Fechas</h2>
             <ul class="dates-list">
-                ejemplo de <li> que debe crearse via JS con la lógica determinada
-                <li>
-                    <button class="btn-personas"><span class="letras-btn-dia">LUN</span><br><span>26</span></button>
-                </li>
+
             </ul>
         </div>
         <div class="container-calendar hidden">
@@ -90,5 +87,7 @@
 </div>
 
 </body>
-<script src="../frontend/static/js/date-picker.js"></script>
+<script src="{{ url_for('static', filename='js/date-picker.js') }}"></script>
+<script src="{{ url_for('static', filename='js/moment.js') }}"></script>
+<script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </html>

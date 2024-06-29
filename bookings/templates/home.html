@@ -2,87 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arbonaida - Reservas</title>
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <title>Reserva de Restaurante</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .btn-group-toggle .btn {
+            margin: 2px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <header class="my-4">
-            <h1>Arbonaida</h1>
-            <h2>Reservas</h2>
-        </header>
-        <form id="reservation-form" method="POST" action="/book">
+    <div class="container mt-5">
+        <h1 class="mb-4">Reserva tu mesa</h1>
+        <form id="reservation-form" method="POST" action="/">
+            {{ form.hidden_tag() }}
             <div class="form-group">
-                <label for="num-people">Cantidad de personas</label>
-                <select id="num-people" name="num-people" class="form-control" required>
-                    {% for i in range(2, 9) %}
-                        <option value="{{ i }}">{{ i }}</option>
-                    {% endfor %}
-                </select>
+                {{ form.num_people.label(class="form-label") }}
+                {{ form.num_people(class="form-control", id="num-people") }}
             </div>
             <div class="form-group">
-                <label for="date">Fecha</label>
-                <input type="text" id="date" name="date" class="form-control" required>
+                {{ form.date.label(class="form-label") }}
+                {{ form.date(class="form-control", id="date") }}
             </div>
+            <div class="form-group form-check">
+    {{ form.location(class="form-check-input", id="location") }}
+    {{ form.location.label(class="form-check-label", for="location") }}
+</div>
+
             <div class="form-group">
-                <label for="location">Ubicación</label>
-                <div class="form-check">
-                    <input type="checkbox" id="location" name="location" class="form-check-input" checked>
-                    <label for="location" class="form-check-label">Indoor</label>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Horarios disponibles</label>
+                {{ form.timeslot.label(class="form-label") }}
                 <div id="time-slots" class="btn-group btn-group-toggle" data-toggle="buttons">
                     <!-- Los botones de horario se generarán dinámicamente -->
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Reservar</button>
+            <button type="submit" class="btn btn-primary" disabled>Reservar</button>
         </form>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="./static/js/home.js"></script>
-
-<!-- Modal -->
-<div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="confirmationModalLabel">Confirmación de Reserva</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <p id="reservationInfo"></p>
-                <form id="confirmationForm">
-                    <div class="form-group">
-                        <label for="name">Nombre</label>
-                        <input type="text" class="form-control" id="name" name="name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Teléfono</label>
-                        <input type="tel" class="form-control" id="phone" name="phone" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" class="form-control" id="email" name="email" required>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Volver</button>
-                <button type="submit" class="btn btn-primary" form="confirmationForm">Confirmar</button>
+    <!-- Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmationModalLabel">Confirmación de Reserva</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p id="reservationInfo"></p>
+                    <form id="confirmationForm">
+                        <div class="form-group">
+                            <label for="modal-name">Nombre</label>
+                            <input type="text" class="form-control" id="modal-name" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal-phone">Teléfono</label>
+                            <input type="tel" class="form-control" id="modal-phone" name="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal-email">Email</label>
+                            <input type="email" class="form-control" id="modal-email" name="email" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Volver</button>
+                    <button type="button" class="btn btn-primary" id="confirm-reservation">Confirmar</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
 </html>

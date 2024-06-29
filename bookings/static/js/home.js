@@ -9,34 +9,22 @@ document.addEventListener("DOMContentLoaded", function () {
     function calculateDefaultDate() {
     // Obtener la fecha y hora actual en la zona horaria local
     const now = new Date();
-    console.log(now);
-    const day = now.getDay(); // 0 = Domingo, 1 = Lunes, 2 = Martes..., 6 = Sábado
-    console.log(day); // 3
+    const day = now.getDay();
     const hour = now.getHours();
-    console.log(hour); // 0
 
     if (day === 1) {
-        // Si es Lunes, la fecha por defecto es el Martes
         now.setDate(now.getDate() + 1);
     } else if (day >= 2 && day <= 6) {
-        console.log('This case')
-        // Si es Martes a Sábado y antes de las 20:00, la fecha por defecto es hoy
-        // Si es después de las 20:00, la fecha por defecto es mañana
         if (hour >= 20) {
             now.setDate(now.getDate() + 1);
         }
     } else if (day === 0) {
-        // Si es Domingo y antes de las 13:00, la fecha por defecto es hoy
-        // Si es después de las 13:00, la fecha por defecto es el próximo Martes
         if (hour >= 13) {
-            now.setDate(now.getDate() + 2); // próximo Martes
+            now.setDate(now.getDate() + 2);
         }
     }
 
-    // Devuelve la fecha en formato Y-m-d
-    console.log(now); // Wed Jun 26 2024 00:19:15 GMT+0200 (hora de verano de Europa central)
     const defaultDate = now.toLocaleDateString('en-CA')
-    console.log(defaultDate); // 2024-06-25
     return defaultDate;
 }
 

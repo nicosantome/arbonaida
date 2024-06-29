@@ -1,10 +1,28 @@
-from flask import current_app as app, render_template, request, jsonify
+from flask import current_app as app, render_template, request, jsonify, flash, redirect, url_for
 from utils import check_availability
+from .forms import ReservationForm
 
-# Define tus rutas aquí
-@app.route('/')
+
+@app.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('home.html')
+    form = ReservationForm()
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            num_people = form.num_people.data
+            date = form.date.data.strftime('%Y-%m-%d')
+            location = 'indoor' if form.location.data else 'outdoor'
+            timeslot = form.timeslot.data
+            name = form.name.data
+            phone = form.phone.data
+            email = form.email.data
+
+            # Aquí puedes procesar la reserva, guardar en la base de datos, etc.
+            # Supongamos que la reserva se realiza con éxito:
+            flash('Reserva confirmada con éxito.')
+            return redirect(url_for('home'))
+
+    return render_template('home.html', form=form)
 
 
 @app.route('/check_availability', methods=['GET'])

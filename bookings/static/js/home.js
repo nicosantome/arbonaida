@@ -105,6 +105,13 @@ document.addEventListener("DOMContentLoaded", function () {
             reserveButton.disabled = false; // Habilitar el botón Reservar
         }
     });
+
+        // Escuchar el evento submit del formulario de reservas
+    document.getElementById("reservation-form").addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevenir el envío del formulario por defecto
+        openConfirmationModal();
+    });
+
     function openConfirmationModal() {
         const numPeople = document.getElementById("num-people").value;
         const date = document.getElementById("date").value;
@@ -117,10 +124,30 @@ document.addEventListener("DOMContentLoaded", function () {
         $('#confirmationModal').modal('show'); // Abrir el modal usando jQuery
     }
 
-    // Escuchar el evento submit del formulario de reservas
-    document.getElementById("reservation-form").addEventListener("submit", function (event) {
-        event.preventDefault(); // Prevenir el envío del formulario por defecto
-        openConfirmationModal();
+// Event listener para el botón "Confirmar" del modal
+    document.getElementById("confirm-reservation").addEventListener("click", function () {
+        const formData = new FormData(document.getElementById("confirmationForm"));
+
+        // Realizar la solicitud POST
+        fetch('/', {
+            method: 'POST',
+            body: formData
+
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.text();
+        })
+        .then(data => {
+            console.log('Confirmación exitosa:');
+            $('#confirmationModal').modal('hide'); // Cerrar el modal después de confirmar
+        })
+        .catch(error => {
+            console.error('Error al confirmar la reserva:', error);
+            // Manejar el error aquí
+        });
     });
 
     // Ejecutar checkAvailability cuando se cambian la cantidad de personas, la fecha o la ubicación

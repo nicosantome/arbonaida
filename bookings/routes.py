@@ -8,7 +8,9 @@ def home():
     form = ReservationForm()
 
     if request.method == 'POST':
+        print('This prints')
         if form.validate_on_submit():
+            print('This doesnt print')
             num_people = form.num_people.data
             date = form.date.data.strftime('%Y-%m-%d')
             location = 'indoor' if form.location.data else 'outdoor'
@@ -20,6 +22,7 @@ def home():
             # Aquí puedes procesar la reserva, guardar en la base de datos, etc.
             # Supongamos que la reserva se realiza con éxito:
             flash('Reserva confirmada con éxito.')
+            print('Received confirm')
             return redirect(url_for('home'))
 
     return render_template('home.html', form=form)

@@ -136,7 +136,6 @@ def check_availability(num_people, date_str, location):
                 db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
                 ~TableAvailability.table_id.endswith('_O')
             ).all()
-        print("available_timeslots_query:", available_timeslots_query)
 
         # Organizar las mesas por table_id y time_slot
         table_slots = {}
@@ -144,7 +143,6 @@ def check_availability(num_people, date_str, location):
             if table.table_id not in table_slots:
                 table_slots[table.table_id] = []
             table_slots[table.table_id].append(table.time_slot)
-        print("table_slots:", table_slots)
 
         # Función para verificar si los time_slots son consecutivos en intervalos de 15 minutos
         def is_valid_start_time(time_slots):
@@ -174,8 +172,6 @@ def check_availability(num_people, date_str, location):
 
         # Ordenar por start_time
         available_start_times.sort(key=lambda x: datetime.strptime(x['start_time'], '%H:%M'))
-
-        print("available_start_times:", available_start_times)
 
         return available_start_times
 

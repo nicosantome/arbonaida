@@ -29,66 +29,63 @@ document.addEventListener("DOMContentLoaded", function () {
 }
 
     function checkAvailability() {
-        const numPeople = document.getElementById("num-people").value;
-        const date = document.getElementById("date").value;
-        const location = document.getElementById("location").checked ? "indoor" : "outdoor";
+            const numPeople = document.getElementById("num-people").value;
+            const date = document.getElementById("date").value;
+            const location = document.getElementById("location").checked ? "indoor" : "outdoor";
 
-        fetch(`/check_availability?num_people=${numPeople}&date=${date}&location=${location}`)
-            .then(response => response.json())
-            .then(data => {
-                const timeSlotsContainer = document.getElementById("time-slots");
-                timeSlotsContainer.innerHTML = ""; // Limpiar cualquier contenido previo
+            fetch(`/check_availability?num_people=${numPeople}&date=${date}&location=${location}`)
+                .then(response => response.json())
+                .then(data => {
+                    const timeSlotsContainer = document.getElementById("time-slots");
+                    timeSlotsContainer.innerHTML = ""; // Limpiar cualquier contenido previo
 
-                // Verificar si data.available_times es un array
-                if (Array.isArray(data.available_times) && data.available_times.length > 0) {
-                    let isTimeslotSelected = false;
+                    if (Array.isArray(data.available_times) && data.available_times.length > 0) {
+                        let isTimeslotSelected = false;
 
-                    data.available_times.forEach(entry => {
-                        const timeslot = entry.start_time;
+                        data.available_times.forEach(entry => {
+                            const timeslot = entry.start_time;
 
-                        const label = document.createElement("label");
-                        label.classList.add("btn", "btn-outline-primary");
+                            const label = document.createElement("label");
+                            label.classList.add("btn", "btn-outline-primary");
 
-                        const input = document.createElement("input");
-                        input.type = "radio";
-                        input.name = "timeslot";
-                        input.value = timeslot;
-                        input.autocomplete = "off";
+                            const input = document.createElement("input");
+                            input.type = "radio";
+                            input.name = "timeslot";
+                            input.value = timeslot;
+                            input.autocomplete = "off";
 
-                        input.addEventListener("change", function() {
-                            isTimeslotSelected = true;
-                            reserveButton.disabled = false;
+                            input.addEventListener("change", function() {
+                                isTimeslotSelected = true;
+                                document.getElementById("reserve-button").disabled = false;
+                            });
+
+                            label.appendChild(input);
+                            label.appendChild(document.createTextNode(timeslot));
+                            timeSlotsContainer.appendChild(label);
                         });
 
-                        label.appendChild(input);
-                        label.appendChild(document.createTextNode(timeslot));
-                        timeSlotsContainer.appendChild(label);
-                    });
+                        const timeSlots = document.querySelectorAll('input[name="timeslot"]');
+                        timeSlots.forEach(input => {
+                            if (input.checked) {
+                                isTimeslotSelected = true;
+                            }
+                        });
 
-                    // Verificar si hay algún horario seleccionado inicialmente
-                    const timeSlots = document.querySelectorAll('input[name="timeslot"]');
-                    timeSlots.forEach(input => {
-                        if (input.checked) {
-                            isTimeslotSelected = true;
-                        }
-                    });
+                        const reserveButton = document.getElementById("reserve-button");
+                        reserveButton.disabled = !isTimeslotSelected;
 
-                    // Habilitar o deshabilitar el botón Reservar según si se ha seleccionado un horario
-                    const reserveButton = document.querySelector('button[type="submit"]');
-                    reserveButton.disabled = !isTimeslotSelected;
-
-                } else {
-                    console.error('No hay horarios disponibles para la fecha seleccionada:', data);
-                    const reserveButton = document.querySelector('button[type="submit"]');
-                    reserveButton.disabled = true; // Deshabilitar el botón si no hay horarios disponibles
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching availability:', error);
-                const reserveButton = document.querySelector('button[type="submit"]');
-                reserveButton.disabled = true; // Deshabilitar el botón en caso de error
-            });
-    }
+                    } else {
+                        console.error('No hay horarios disponibles para la fecha seleccionada:', data);
+                        const reserveButton = document.getElementById("reserve-button");
+                        reserveButton.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching availability:', error);
+                    const reserveButton = document.getElementById("reserve-button");
+                    reserveButton.disabled = true;
+                });
+        }
 
     // Ejecutar checkAvailability al cargar la página
     checkAvailability();
@@ -96,58 +93,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // Event listener para capturar cambios en el contenedor de horarios
     const timeSlotsContainer = document.getElementById("time-slots");
     timeSlotsContainer.addEventListener("click", function(event) {
-        console.log('Evento de cambio detectado en el contenedor #time-slots');
-        console.log(event.target); // Mostrar el elemento que originó el evento
 
         // Verificar si el elemento que originó el evento es un input tipo radio con nombre 'timeslot'
         if (event.target && event.target.type === "radio" && event.target.name === "timeslot") {
-            const reserveButton = document.querySelector('button[type="submit"]');
+            const reserveButton = document.getElementById("reserve-button");
             reserveButton.disabled = false; // Habilitar el botón Reservar
         }
-    });
-
-        // Escuchar el evento submit del formulario de reservas
-    document.getElementById("reservation-form").addEventListener("submit", function (event) {
-        event.preventDefault(); // Prevenir el envío del formulario por defecto
-        openConfirmationModal();
-    });
-
-    function openConfirmationModal() {
-        const numPeople = document.getElementById("num-people").value;
-        const date = document.getElementById("date").value;
-        const location = document.getElementById("location").checked ? "Indoor" : "Outdoor";
-        const selectedTimeslot = document.querySelector('input[name="timeslot"]:checked').value;
-
-        const reservationInfo = `Reserva confirmada para ${numPeople} personas el día ${date} a las ${selectedTimeslot}. Ubicación: ${location}.`;
-
-        document.getElementById("reservationInfo").textContent = reservationInfo;
-        $('#confirmationModal').modal('show'); // Abrir el modal usando jQuery
-    }
-
-// Event listener para el botón "Confirmar" del modal
-    document.getElementById("confirm-reservation").addEventListener("click", function () {
-        const formData = new FormData(document.getElementById("confirmationForm"));
-
-        // Realizar la solicitud POST
-        fetch('/', {
-            method: 'POST',
-            body: formData
-
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.text();
-        })
-        .then(data => {
-            console.log('Confirmación exitosa:');
-            $('#confirmationModal').modal('hide'); // Cerrar el modal después de confirmar
-        })
-        .catch(error => {
-            console.error('Error al confirmar la reserva:', error);
-            // Manejar el error aquí
-        });
     });
 
     // Ejecutar checkAvailability cuando se cambian la cantidad de personas, la fecha o la ubicación

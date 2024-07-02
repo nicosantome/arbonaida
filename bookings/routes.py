@@ -9,11 +9,13 @@ def home():
 
     if request.method == 'POST':
         print('This prints')
+        print('Form data:', request.form)
+
         if form.validate_on_submit():
             print('This doesnt print')
             num_people = form.num_people.data
             date = form.date.data.strftime('%Y-%m-%d')
-            location = 'indoor' if form.location.data else 'outdoor'
+            location = form.location.data
             timeslot = form.timeslot.data
             name = form.name.data
             phone = form.phone.data
@@ -24,6 +26,8 @@ def home():
             flash('Reserva confirmada con éxito.')
             print('Received confirm')
             return redirect(url_for('home'))
+        else:
+            print('Validation errors:', form.errors)
 
     return render_template('home.html', form=form)
 

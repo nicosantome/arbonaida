@@ -14,69 +14,76 @@
 <body>
     <div class="container mt-5">
         <h1 class="mb-4">Reserva tu mesa</h1>
-        <form id="reservation-form" method="POST" action="/">
+        <form method="POST" action="{{ url_for('home') }}">
             {{ form.hidden_tag() }}
-            <div class="form-group">
-                {{ form.num_people.label(class="form-label") }}
-                {{ form.num_people(class="form-control", id="num-people") }}
-            </div>
-            <div class="form-group">
-                {{ form.date.label(class="form-label") }}
-                {{ form.date(class="form-control", id="date") }}
-            </div>
-            <div class="form-group form-check">
-                {{ form.location(class="form-check-input", id="location") }}
-                {{ form.location.label(class="form-check-label", for="location") }}
-</div>
 
             <div class="form-group">
-                {{ form.timeslot.label(class="form-label") }}
-                <div id="time-slots" class="btn-group btn-group-toggle" data-toggle="buttons">
-                    <!-- Los botones de horario se generarán dinámicamente -->
+                <label for="num_people">{{ form.num_people.label }}</label>
+                {{ form.num_people(class="form-control", id="num-people") }}
+            </div>
+
+            <div class="form-group">
+                <label for="date">{{ form.date.label }}</label>
+                {{ form.date(class="form-control", id="date") }}
+            </div>
+
+            <div class="form-group form-check">
+                {{ form.location(class="form-check-input", id="location") }}
+                <label class="form-check-label" for="location">{{ form.location.label }}</label>
+            </div>
+
+            <div class="form-group">
+                <label>{{ form.timeslot.label }}</label>
+                <div id="time-slots" class="btn-group-toggle" data-toggle="buttons">
+                    {{ form.timeslot(class="form-control", id="timeslot") }}
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary" disabled>Reservar</button>
+
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reservationModal">
+                Reservar
+            </button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="reservationModal" tabindex="-1" aria-labelledby="reservationModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="reservationModalLabel">Complete su reserva</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="name">{{ form.name.label }}</label>
+                                {{ form.name(class="form-control", id="name") }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="phone">{{ form.phone.label }}</label>
+                                {{ form.phone(class="form-control", id="phone") }}
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email">{{ form.email.label }}</label>
+                                {{ form.email(class="form-control", id="email") }}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                            {{ form.submit(class="btn btn-primary", id="reserve-button", disabled=True) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 
-    <!-- Modal -->
-    <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="confirmationModalLabel">Confirmación de Reserva</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <p id="reservationInfo"></p>
-                    <form id="confirmationForm">
-                        <div class="form-group">
-                            <label for="modal-name">Nombre</label>
-                            <input type="text" class="form-control" id="modal-name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="modal-phone">Teléfono</label>
-                            <input type="tel" class="form-control" id="modal-phone" name="phone" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="modal-email">Email</label>
-                            <input type="email" class="form-control" id="modal-email" name="email" required>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Volver</button>
-                    <button type="button" class="btn btn-primary" id="confirm-reservation">Confirmar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="{{ url_for('static', filename='js/home.js') }}"></script>
 </body>
 </html>

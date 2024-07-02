@@ -9,7 +9,7 @@ class ReservationForm(FlaskForm):
                              validators=[InputRequired()])
     date = DateField('Fecha', validators=[DataRequired()], format='%Y-%m-%d')
     location = BooleanField('Indoor')
-    timeslot = RadioField('Time Slot', choices=[], validators=[DataRequired()])
+    timeslot = RadioField('Time Slot', choices=[], validate_choice=False, validators=[DataRequired()])
     name = StringField('Nombre', validators=[DataRequired()])
     phone = TelField('Teléfono', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired()])

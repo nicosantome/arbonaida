@@ -114,12 +114,10 @@ def check_availability(num_people, date_str, location):
 
         # Obtener las reglas de reserva para la fecha
         reservation_rules = get_reservation_rules(date_str)
-        print("Reservation rules: ", reservation_rules)
 
         # Determinar los tipos de mesa que pueden aceptar la cantidad de personas
         valid_table_types = [table_type for table_type, rule in reservation_rules.items() if
                              rule['min_accept'] <= num_people <= rule['max_accept']]
-        print("valid_table_types: ", valid_table_types)
 
         # Filtrar las mesas adecuadas por tipo de mesa y ubicación directamente en la consulta a la base de datos
         if location == 'outdoor':

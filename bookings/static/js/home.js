@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function checkAvailability() {
             const numPeople = document.getElementById("num-people").value;
             const date = document.getElementById("date").value;
-            const location = document.getElementById("location").checked ? "indoor" : "outdoor";
+            const location = document.querySelector('input[name="location"]:checked').value;
 
             fetch(`/check_availability?num_people=${numPeople}&date=${date}&location=${location}`)
                 .then(response => response.json())
@@ -104,5 +104,32 @@ document.addEventListener("DOMContentLoaded", function () {
     // Ejecutar checkAvailability cuando se cambian la cantidad de personas, la fecha o la ubicación
     document.getElementById("num-people").addEventListener("change", checkAvailability);
     document.getElementById("date").addEventListener("change", checkAvailability);
-    document.getElementById("location").addEventListener("change", checkAvailability);
+
+    const location_btns = document.querySelectorAll("#location .btn")
+    location_btns.forEach(function(button) {
+    button.addEventListener('click', function(event) {
+        // Evitar que el evento de clic se dispare dos veces
+        event.preventDefault();
+
+        // Remover la clase 'focus' de todos los botones
+        location_btns.forEach(function(btn) {
+            btn.classList.remove('focus');
+        });
+
+        // Agregar la clase 'focus' al botón clickeado
+        this.classList.add('focus');
+
+        // Forzar el cambio de radio manualmente si no es automático
+        const input = this.querySelector('input');
+        if (input && !input.checked) {
+            input.checked = true;
+        }
+
+        // Ejecutar checkAvailability() solo una vez
+        checkAvailability();
+    });
 });
+
+
+    });
+

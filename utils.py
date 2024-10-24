@@ -5,12 +5,15 @@ from bookings.models import TableAvailability, TableConfig
 import json
 
 
-def is_closed(date):
+def is_closed(target_date):
+    """Verifica si el restaurante está cerrado en la fecha dada."""
     for period in CLOSED_DAYS:
         start_date = datetime.strptime(period['start_date'], '%Y-%m-%d').date()
         end_date = datetime.strptime(period['end_date'], '%Y-%m-%d').date()
-        if start_date <= date <= end_date:
+        if start_date <= target_date <= end_date:
+            print(True)
             return True
+    print(False)
     return False
 
 
@@ -119,6 +122,7 @@ def check_availability(num_people, date_str, location):
         valid_table_types = [table_type for table_type, rule in reservation_rules.items() if
                              rule['min_accept'] <= num_people <= rule['max_accept']]
 
+
         # Filtrar las mesas adecuadas por tipo de mesa y ubicación directamente en la consulta a la base de datos
         if location == 'outdoor':
             available_timeslots_query = TableAvailability.query.filter(
@@ -141,6 +145,7 @@ def check_availability(num_people, date_str, location):
             if table.table_id not in table_slots:
                 table_slots[table.table_id] = []
             table_slots[table.table_id].append(table.time_slot)
+        print(table_slots)
 
         # Función para verificar si los time_slots son consecutivos en intervalos de 15 minutos
         def is_valid_start_time(time_slots):
@@ -181,22 +186,3 @@ def ensure_availability_records(date):
         if not existing_records:
             create_availability_records(date)
 
-
-# if __name__ == '__main__':
-#     app = create_app()
-#     with app.app_context():
-#         db.create_all()  # Crea las tablas en la base de datos
-#         example_date = date(2024, 6, 25)
-#         create_availability_records(example_date)
-# 22 - 23 - 25
-
-if __name__ == '__main__':
-    date_str = '2024-06-25'
-    num_people = 2
-    location = 'indoor'
-    check_availability(num_people, date_str, location)
-
-
-
-# if __name__ == '__main__':
-#     create_time_slots('11:00-16:00')

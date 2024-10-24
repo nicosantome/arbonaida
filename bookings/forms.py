@@ -8,7 +8,8 @@ class ReservationForm(FlaskForm):
     num_people = SelectField('Cantidad de personas', choices=[(str(i), str(i)) for i in range(2, 9)], default='2',
                              validators=[InputRequired()])
     date = DateField('Fecha', validators=[DataRequired()], format='%Y-%m-%d')
-    location = BooleanField('Indoor')
+    location = RadioField('Ubicación', choices=[('indoor', 'Dentro'), ('outdoor', 'Fuera')], default='indoor',
+                          validators=[DataRequired()])
     timeslot = RadioField('Time Slot', choices=[], validate_choice=False, validators=[DataRequired()])
     name = StringField('Nombre', validators=[DataRequired()])
     phone = TelField('Teléfono', validators=[DataRequired()])

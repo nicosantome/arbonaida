@@ -7,27 +7,17 @@ from .forms import ReservationForm
 def home():
     form = ReservationForm()
 
-    if request.method == 'POST':
-        print('This prints')
-        print('Form data:', request.form)
-
-        if form.validate_on_submit():
-            print('This doesnt print')
-            num_people = form.num_people.data
-            date = form.date.data.strftime('%Y-%m-%d')
-            location = form.location.data
-            timeslot = form.timeslot.data
-            name = form.name.data
-            phone = form.phone.data
-            email = form.email.data
-
-            # Aquí puedes procesar la reserva, guardar en la base de datos, etc.
-            # Supongamos que la reserva se realiza con éxito:
-            flash('Reserva confirmada con éxito.')
-            print('Received confirm')
-            return redirect(url_for('home'))
-        else:
-            print('Validation errors:', form.errors)
+    if form.validate_on_submit():
+        num_people = form.num_people.data
+        date = form.date.data.strftime('%Y-%m-%d')
+        location = form.location.data
+        timeslot = form.timeslot.data
+        name = form.name.data
+        phone = form.phone.data
+        email = form.email.data
+        # create booking, block avail
+        flash('Reserva confirmada con éxito.')
+        return redirect(url_for('home'))
 
     return render_template('home.html', form=form)
 

@@ -1,20 +1,21 @@
+from datetime import date, time
 # Días de apertura
 OPENING_DAYS = ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 # Horarios de apertura
 OPENING_TIMES = {
-    'Tuesday': {'lunch': '13:00-16:00', 'dinner': '19:00-00:00'},
-    'Wednesday': {'lunch': '13:00-16:00', 'dinner': '19:00-00:00'},
-    'Thursday': {'lunch': '13:00-16:00', 'dinner': '19:00-00:00'},
-    'Friday': {'lunch': '13:00-16:00', 'dinner': '19:00-01:00'},
-    'Saturday': {'lunch': '13:00-16:00', 'dinner': '19:00-01:00'},
-    'Sunday': {'lunch': '13:00-17:00', 'dinner': None}
+    'Tuesday': (time(13, 0), time(16, 0), time(19, 0), time(0, 0)),  # (lunch_start, lunch_end, dinner_start, dinner_end)
+    'Wednesday': (time(13, 0), time(16, 0), time(19, 0), time(0, 0)),
+    'Thursday': (time(13, 0), time(16, 0), time(19, 0), time(0, 0)),
+    'Friday': (time(13, 0), time(16, 0), time(19, 0), time(1, 0)),
+    'Saturday': (time(13, 0), time(16, 0), time(19, 0), time(1, 0)),
+    'Sunday': (time(13, 0), time(17, 0), None, None)  # No hay cena
 }
 
 # Días de cerrado
 CLOSED_DAYS = [
-    {'start_date': '2024-08-01', 'end_date': '2024-08-31'},  # Ejemplo de período de vacaciones
-    {'start_date': '2024-09-10', 'end_date': '2024-09-10'},  # Ejemplo de día suelto
+    {'start_date': date(2024, 8, 1), 'end_date': date(2024, 8, 31)},  # Ejemplo de período de vacaciones
+    {'start_date': date(2024, 9, 10), 'end_date': date(2024, 9, 10)}  # Ejemplo de día suelto
 ]
 
 # Configuraciones de mesas estándar y alternativas para indoor y outdoor
@@ -44,7 +45,7 @@ DEFAULT_RULES = {
 
 # Excepciones de reglas de reserva para fechas específicas
 EXCEPTION_RULES = {
-    '2024-05-15': {
+    date(2024, 5, 15): {
         '2p': {'min_accept': 2, 'max_accept': 2},
         '4p': {'min_accept': 4, 'max_accept': 4},
         '5p': {'min_accept': 5, 'max_accept': 5}

@@ -24,10 +24,12 @@ class Comment(db.Model):
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
-    time = db.Column(db.Time, nullable=False)
-    guests = db.Column(db.Integer, nullable=False)
+    table_id = db.Column(db.String(10), nullable=False)
+    start_time = db.Column(db.Time, nullable=False)
+    num_people = db.Column(db.Integer, nullable=False)
+    location = db.Column(db.String(10), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
 
 
 class TableAvailability(db.Model):

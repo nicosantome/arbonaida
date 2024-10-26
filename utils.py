@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, date, time
 from restaurant_config import OPENING_TIMES, INDOOR_CONFIGS, OUTDOOR_CONFIGS, CLOSED_DAYS, DEFAULT_RULES, EXCEPTION_RULES
 from bookings import create_app, db
-from bookings.models import TableAvailability, TableConfig
+from bookings.models import TableAvailability, TableConfig, Customer, Booking
 import json
 
 
@@ -13,23 +13,34 @@ def is_closed(target_date):
     return False
 
 
-def generate_time_slots(start_time, end_time):
-    """Genera intervalos de tiempo de 15 minutos entre dos horas, manejando horarios que cruzan medianoche."""
+def generate_time_slots(start_time, end_time=None, num_intervals=6):
+    """
+    Genera intervalos de tiempo de 15 minutos entre dos horas o una cantidad específica de intervalos a partir de un solo `start_time`.
+
+    - Si se proporciona solo `start_time`, genera `num_intervals` intervalos de 15 minutos desde `start_time`.
+    - Si se proporcionan ambos `start_time` y `end_time`, genera intervalos de 15 minutos entre esas horas.
+    """
     time_slots = []
-
-    # Convertir `start_time` y `end_time` en datetime para realizar cálculos
     current_datetime = datetime.combine(datetime.today(), start_time)
-    end_datetime = datetime.combine(datetime.today(), end_time)
 
-    # Ajustar si el periodo cruza la medianoche
-    if end_time <= start_time:
-        end_datetime += timedelta(days=1)
+    # Si se proporciona end_time, genera hasta end_time
+    if end_time:
+        end_datetime = datetime.combine(datetime.today(), end_time)
 
-    # Generar intervalos de 15 minutos hasta alcanzar `end_datetime`
-    while current_datetime < end_datetime:
-        time_slots.append(current_datetime.time().strftime('%H:%M'))
-        current_datetime += timedelta(minutes=15)
+        # Ajustar si el periodo cruza la medianoche
+        if end_time <= start_time:
+            end_datetime += timedelta(days=1)
 
+        while current_datetime < end_datetime:
+            time_slots.append(current_datetime.time().strftime('%H:%M'))
+            current_datetime += timedelta(minutes=15)
+
+    # Si no se proporciona end_time, genera `num_intervals` intervalos de 15 minutos desde `start_time`
+    else:
+        for _ in range(num_intervals):
+            time_slots.append(current_datetime.time().strftime('%H:%M'))
+            current_datetime += timedelta(minutes=15)
+    print(type(time_slots[1]), time_slots)
     return time_slots
 
 
@@ -108,18 +119,29 @@ def get_reservation_rules(date_obj):
     return DEFAULT_RULES
 
 
-def check_availability(num_people, date_obj, location):
+def check_availability(booking_data):
+    """Función principal para verificar la disponibilidad de mesas."""
+
     app = create_app()
     with app.app_context():
-        ensure_availability_records(date_obj)
-        reservation_rules = get_reservation_rules(date_obj)
+        ensure_availability_records(booking_data['date'])
+        reservation_rules = get_reservation_rules(booking_data['date'])
 
-        valid_table_types = get_valid_table_types(num_people, reservation_rules)
-        available_timeslots_query = query_available_timeslots(date_obj, location, valid_table_types)
+        valid_table_types = get_valid_table_types(booking_data['num_people'], reservation_rules)
+        available_timeslots_query = query_available_timeslots(booking_data['date'], booking_data['location'], valid_table_types)
 
         table_slots = organize_time_slots_by_table(available_timeslots_query)
         print(table_slots)
         available_start_times = find_valid_start_times(table_slots)
+        print(booking_data)
+        if booking_data.get('timeslot'):
+            print('YES')
+            # Filtrar los horarios disponibles que coincidan con el 'timeslot' solicitado
+            matched_times = [
+                time for time in available_start_times
+                if time['start_time'] == booking_data['timeslot']
+            ]
+            return matched_times
 
         return available_start_times
 
@@ -199,3 +221,36 @@ def ensure_availability_records(date_obj):
         if not existing_records:
             create_availability_records(date_obj)
 
+
+def make_booking(booking_data, customer_data):
+    """Realiza una reserva de mesa usando los slots disponibles pre-filtrados."""
+
+    # Paso 1: Volver a comprobar dispo
+    available_times = check_availability(booking_data)
+    if not available_times:
+        return False, "No hay mesas disponibles para el horario solicitado."
+
+    # Paso 2: Comprobar cliente
+    customer = Customer.query.filter_by(email=customer_data['email']).first()
+    if not customer:
+        customer = Customer(name=customer_data['name'], phone=customer_data['phone'], email=customer_data['email'])
+        db.session.add(customer)
+        db.session.commit()
+
+
+    # # Paso 3: Registrar la reserva y actualizar disponibilidad
+    booking = Booking(
+        date=booking_data['date'],
+        table_id=available_times[0]['table_id'],
+        start_time=booking_data['timeslot'],
+        num_people=booking_data['num_people'],
+        location=booking_data['location'],
+        customer_id=customer.id
+    )
+    db.session.add(booking)
+    #
+    # # Actualizar el timeslot a no disponible
+    # TableAvailability.query.filter_by(date=date_obj, table_id=selected_table_id, time_slot=selected_timeslot).update({"is_available": False})
+    # db.session.commit()
+
+    return True, "Reserva realizada con éxito."

@@ -1,4 +1,5 @@
 from bookings import db
+from sqlalchemy import Time
 
 
 class User(db.Model):
@@ -37,7 +38,7 @@ class TableAvailability(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False)
     table_id = db.Column(db.String(5), nullable=False)  # Ejemplo: '2pA'
-    time_slot = db.Column(db.String(5), nullable=False)  # Ejemplo: '14:30'
+    time_slot = db.Column(Time, nullable=False)
     is_available = db.Column(db.Boolean, default=True)
 
 

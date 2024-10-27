@@ -13,11 +13,10 @@ def home():
         date_str = form.date.data.strftime('%Y-%m-%d')
         booking_data = {
             'date': datetime.strptime(date_str, '%Y-%m-%d').date(),
-            'timeslot': form.timeslot.data,
+            'timeslot': datetime.strptime(form.timeslot.data, '%H:%M').time(),
             'num_people': int(form.num_people.data),
             'location': form.location.data
         }
-        print(type(booking_data['num_people']))
         print(booking_data['timeslot'], type(booking_data['timeslot']))
         # Información del cliente
         customer_data = {
@@ -25,7 +24,7 @@ def home():
             'phone': form.phone.data,
             'email': form.email.data
         }
-
+        print('route')
         # Hacer la reserva
         success, message = make_booking(booking_data, customer_data)
 
@@ -49,4 +48,14 @@ def check_availability_route():
     }
 
     available_times = check_availability(booking_data)
-    return jsonify({'available_times': available_times})
+
+    # Convertir objetos de tiempo a cadena 'HH:MM'
+    available_times_serializable = [
+        {
+            'start_time': time_data['start_time'].strftime('%H:%M'),
+            'table_id': time_data['table_id']
+        }
+        for time_data in available_times
+    ]
+
+    return jsonify({'available_times': available_times_serializable})

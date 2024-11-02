@@ -40,7 +40,8 @@ DEFAULT_RULES = {
     '2p': {'min_accept': 1, 'max_accept': 2},
     '3p': {'min_accept': 2, 'max_accept': 3},
     '4p': {'min_accept': 2, 'max_accept': 4},
-    '5p': {'min_accept': 3, 'max_accept': 5}
+    '5p': {'min_accept': 3, 'max_accept': 5},
+    '6p': {'min_accept': 4, 'max_accept': 6}
 }
 
 # Excepciones de reglas de reserva para fechas específicas

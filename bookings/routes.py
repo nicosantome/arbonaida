@@ -1,7 +1,8 @@
 from flask import current_app as app, render_template, request, jsonify, flash, redirect, url_for
-from utils import check_availability, make_booking
+from utils import check_availability, make_booking, get_future_bookings
 from .forms import ReservationForm
 from datetime import datetime
+from bookings import db
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -59,3 +60,35 @@ def check_availability_route():
     ]
 
     return jsonify({'available_times': available_times_serializable})
+
+
+@app.route('/admin', methods=['GET'])
+def admin():
+    data = get_future_bookings()  # Llamar a la función para obtener las reservas futuras
+    return render_template('admin.html', data=data)
+
+
+@app.route('/admin/edit/<int:booking_id>', methods=['GET', 'POST'])
+def edit_booking(booking_id):
+    # Lógica para obtener los detalles de la reserva y procesar la edición
+    # Implementa la lógica para manejar el formulario de edición aquí
+    pass
+
+
+@app.route('/admin/cancel/<int:booking_id>', methods=['POST'])
+def cancel_booking(booking_id):
+    """Ruta para cancelar una reserva."""
+    from models import Booking
+    from utils import release_table_availability  # Importamos la función para liberar la disponibilidad de la mesa
+
+    booking = Booking.query.get(booking_id)
+    if booking:
+        booking.status = False  # Cambiar el estado de la reserva a cancelado
+        db.session.commit()
+
+        # Liberar la disponibilidad de la mesa para la reserva cancelada
+        release_table_availability(booking.date, booking.table_id, booking.start_time)
+
+        return redirect('/admin')
+    else:
+        return "Reserva no encontrada", 404

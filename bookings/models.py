@@ -32,6 +32,7 @@ class Booking(db.Model):
     num_people = db.Column(db.Integer, nullable=False)
     location = db.Column(db.String(10), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    status = db.Column(db.Boolean, nullable=False, default=True)
 
 
 class TableAvailability(db.Model):

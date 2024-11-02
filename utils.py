@@ -308,8 +308,42 @@ def update_availability_slots(date_obj, table_id, start_time):
     db.session.commit()
 
 
+def get_future_bookings():
+    """Obtiene todas las reservas futuras de la base de datos con estado activo."""
+    current_date = datetime.now().date()
+    bookings = Booking.query.join(Customer).filter(
+        Booking.date >= current_date,
+        Booking.status == True
+    ).order_by(Booking.date.asc()).all()
+
+    booking_data = []
+    for booking in bookings:
+        booking_data.append({
+            'id': booking.id,
+            'date': booking.date,
+            'time': booking.start_time,  # Asegúrate de que el atributo es correcto
+            'customer_name': booking.customer.name,  # Relación con Customer
+            'num_people': booking.num_people,
+            'location': booking.location
+        })
+    print(booking_data)
+
+    return booking_data
 
 
+def release_table_availability(date, table_id, start_time):
+    """Libera los registros de disponibilidad de la mesa ocupada por una reserva cancelada."""
+    # Supongamos que cada reserva ocupa un bloque de 2 horas
+    end_time = (datetime.combine(date, start_time) + timedelta(hours=2)).time()
 
+    table_availabilities = TableAvailability.query.filter_by(
+        date=date,
+        table_id=table_id
+    ).filter(
+        TableAvailability.time.between(start_time, end_time)
+    ).all()
 
+    for availability in table_availabilities:
+        availability.is_available = True  # Marcamos la disponibilidad como libre
 
+    db.session.commit()

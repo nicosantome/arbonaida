@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, date, time
-from restaurant_config import OPENING_TIMES, INDOOR_CONFIGS, OUTDOOR_CONFIGS, CLOSED_DAYS, DEFAULT_RULES, EXCEPTION_RULES
+from restaurant_config import OPENING_TIMES, INDOOR_CONFIGS, OUTDOOR_CONFIGS, CLOSED_DAYS, DEFAULT_RULES, EXCEPTION_RULES, TIEMPO_DE_RESERVA
 from bookings import create_app, db
 from bookings.models import TableAvailability, TableConfig, Customer, Booking
 import json
@@ -331,16 +331,30 @@ def get_future_bookings():
     return booking_data
 
 
-def release_table_availability(date, table_id, start_time):
+def set_status_false(booking_id):
+    booking = Booking.query.get(booking_id)
+    if booking:
+        booking.status = False  # Cambiar el estado de la reserva a cancelado
+        db.session.commit()
+    else:
+        return "Reserva no encontrada", 404
+
+
+def release_table_availability(booking_id):
     """Libera los registros de disponibilidad de la mesa ocupada por una reserva cancelada."""
+    booking = Booking.query.get(booking_id)
+
+    if not booking:
+        return "Reserva no encontrada", 404
+
     # Supongamos que cada reserva ocupa un bloque de 2 horas
-    end_time = (datetime.combine(date, start_time) + timedelta(hours=2)).time()
+    end_time = (datetime.combine(booking.date, booking.start_time) + timedelta(hours=TIEMPO_DE_RESERVA)).time()
 
     table_availabilities = TableAvailability.query.filter_by(
-        date=date,
-        table_id=table_id
+        date=booking.date,
+        table_id=booking.table_id
     ).filter(
-        TableAvailability.time.between(start_time, end_time)
+        TableAvailability.time_slot.between(booking.start_time, end_time)
     ).all()
 
     for availability in table_availabilities:

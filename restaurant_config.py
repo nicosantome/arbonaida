@@ -52,3 +52,5 @@ EXCEPTION_RULES = {
         '5p': {'min_accept': 5, 'max_accept': 5}
     }
 }
+
+TIEMPO_DE_RESERVA = 1.5

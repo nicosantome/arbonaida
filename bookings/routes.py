@@ -1,8 +1,9 @@
 from flask import current_app as app, render_template, request, jsonify, flash, redirect, url_for
-from utils import check_availability, make_booking, get_future_bookings
+from utils import check_availability, make_booking, get_future_bookings, release_table_availability, set_status_false
 from .forms import ReservationForm
 from datetime import datetime
 from bookings import db
+from .models import Booking
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -18,14 +19,12 @@ def home():
             'num_people': int(form.num_people.data),
             'location': form.location.data
         }
-        print(booking_data['timeslot'], type(booking_data['timeslot']))
         # Información del cliente
         customer_data = {
             'name': form.name.data,
             'phone': form.phone.data,
             'email': form.email.data
         }
-        print('route')
         # Hacer la reserva
         success, message = make_booking(booking_data, customer_data)
 
@@ -68,27 +67,45 @@ def admin():
     return render_template('admin.html', data=data)
 
 
-@app.route('/admin/edit/<int:booking_id>', methods=['GET', 'POST'])
-def edit_booking(booking_id):
-    # Lógica para obtener los detalles de la reserva y procesar la edición
-    # Implementa la lógica para manejar el formulario de edición aquí
-    pass
-
-
 @app.route('/admin/cancel/<int:booking_id>', methods=['POST'])
 def cancel_booking(booking_id):
     """Ruta para cancelar una reserva."""
-    from models import Booking
-    from utils import release_table_availability  # Importamos la función para liberar la disponibilidad de la mesa
+    set_status_false(booking_id)
+    release_table_availability(booking_id)
 
-    booking = Booking.query.get(booking_id)
-    if booking:
-        booking.status = False  # Cambiar el estado de la reserva a cancelado
+    return redirect('/admin')
+
+
+@app.route('/admin/edit/<int:booking_id>', methods=['POST'])
+def edit_booking(booking_id):
+    # Obtener la reserva a modificar
+    booking = Booking.query.get_or_404(booking_id)
+
+    try:
+        release_table_availability(booking_id)
+        # TODO Guardar nuevos timeslots en tableavailability
+        # Convertir la fecha del formulario a un objeto de tipo date
+        new_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()  # Convertir cadena a objeto date
+
+        # Obtener otros datos del formulario
+        new_time = datetime.strptime(request.form[
+            'timeslot'], '%H:%M').time()
+        new_num_people = int(request.form['num_people'])
+        new_location = request.form['location']
+
+
+        # Actualizar la reserva con los nuevos valores
+        booking.date = new_date
+        booking.start_time = new_time
+        booking.num_people = new_num_people
+        booking.location = new_location
+
+        # Guardar los cambios en la base de datos
         db.session.commit()
+        flash('Reserva modificada exitosamente', 'success')
+        return redirect(url_for('admin'))  # Cambia 'admin_panel' por tu endpoint de vista deseado
 
-        # Liberar la disponibilidad de la mesa para la reserva cancelada
-        release_table_availability(booking.date, booking.table_id, booking.start_time)
-
-        return redirect('/admin')
-    else:
-        return "Reserva no encontrada", 404
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al modificar la reserva: {str(e)}', 'danger')
+        return redirect(url_for('admin'))

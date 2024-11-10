@@ -41,6 +41,7 @@ class TableAvailability(db.Model):
     table_id = db.Column(db.String(5), nullable=False)  # Ejemplo: '2pA'
     time_slot = db.Column(Time, nullable=False)
     is_available = db.Column(db.Boolean, default=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'))
 
 
 class TableConfig(db.Model):

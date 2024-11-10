@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, timedelta
 from restaurant_config import OPENING_TIMES, INDOOR_CONFIGS, OUTDOOR_CONFIGS, CLOSED_DAYS, DEFAULT_RULES, EXCEPTION_RULES, TIEMPO_DE_RESERVA
 from bookings import create_app, db
 from bookings.models import TableAvailability, TableConfig, Customer, Booking
@@ -81,7 +81,7 @@ def process_shift(date_obj, shift, start_time, end_time):
                 date=date_obj,
                 table_id=table_id,
                 time_slot=slot,
-                is_available=True
+                is_available=True,
             )
             db.session.add(availability_record)
 
@@ -124,7 +124,7 @@ def get_reservation_rules(date_obj):
     return DEFAULT_RULES
 
 
-def check_availability(booking_data):
+def check_availability(booking_data, booking_id=None):
     """Función principal para verificar la disponibilidad de mesas."""
 
     app = create_app()
@@ -133,7 +133,7 @@ def check_availability(booking_data):
         reservation_rules = get_reservation_rules(booking_data['date'])
 
         valid_table_types = get_valid_table_types(booking_data['num_people'], reservation_rules)
-        available_timeslots_query = query_available_timeslots(booking_data['date'], booking_data['location'], valid_table_types)
+        available_timeslots_query = query_available_timeslots(booking_data['date'], booking_data['location'], valid_table_types, booking_id)
 
         table_slots = organize_time_slots_by_table(available_timeslots_query)
         available_start_times = find_valid_start_times(table_slots)
@@ -144,7 +144,7 @@ def check_availability(booking_data):
                 if time['start_time'] == booking_data['timeslot']
             ]
             return matched_times
-
+        print(available_start_times)
         return available_start_times
 
 
@@ -156,22 +156,56 @@ def get_valid_table_types(num_people, reservation_rules):
     ]
 
 
-def query_available_timeslots(date_obj, location, valid_table_types):
+def query_available_timeslots(date_obj, location, valid_table_types, booking_id):
     """Consulta la base de datos para obtener los timeslots disponibles según la ubicación y tipos de mesa."""
     if location == 'outdoor':
-        return TableAvailability.query.filter(
-            TableAvailability.date == date_obj,
-            TableAvailability.is_available == True,
-            db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
-            TableAvailability.table_id.endswith('_O')
-        ).all()
+        if booking_id is None:
+            # Cuando no hay booking_id, buscamos únicamente los disponibles
+            return TableAvailability.query.filter(
+                TableAvailability.date == date_obj,
+                TableAvailability.is_available == True,
+                db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
+                TableAvailability.table_id.endswith('_O')
+            ).all()
+        else:
+            # Cuando hay booking_id, buscamos disponibles + ocupados por el mismo booking_id
+            return TableAvailability.query.filter(
+                TableAvailability.date == date_obj,
+                db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
+                TableAvailability.table_id.endswith('_O')
+            ).filter(
+                db.or_(
+                    TableAvailability.is_available == True,
+                    db.and_(
+                        TableAvailability.is_available == False,
+                        TableAvailability.booking_id == booking_id
+                    )
+                )
+            ).all()
     else:
-        return TableAvailability.query.filter(
-            TableAvailability.date == date_obj,
-            TableAvailability.is_available == True,
-            db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
-            ~TableAvailability.table_id.endswith('_O')
-        ).all()
+        if booking_id is None:
+            # Cuando no hay booking_id, buscamos únicamente los disponibles
+            return TableAvailability.query.filter(
+                TableAvailability.date == date_obj,
+                TableAvailability.is_available == True,
+                db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
+                ~TableAvailability.table_id.endswith('_O')
+            ).all()
+        else:
+            # Cuando hay booking_id, buscamos disponibles + ocupados por el mismo booking_id
+            return TableAvailability.query.filter(
+                TableAvailability.date == date_obj,
+                db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
+                ~TableAvailability.table_id.endswith('_O')
+            ).filter(
+                db.or_(
+                    TableAvailability.is_available == True,
+                    db.and_(
+                        TableAvailability.is_available == False,
+                        TableAvailability.booking_id == booking_id
+                    )
+                )
+            ).all()
 
 
 def organize_time_slots_by_table(available_timeslots_query):
@@ -229,7 +263,7 @@ def make_booking(booking_data, customer_data):
     """Handles the end-to-end table booking process."""
 
     # Check availability
-    available_times = check_and_select_available_timeslot(booking_data)
+    available_times = check_availability(booking_data, booking_id=None)
     if not available_times:
         return False, "No hay mesas disponibles para el horario solicitado."
 
@@ -242,19 +276,14 @@ def make_booking(booking_data, customer_data):
         return False, "Error al registrar el cliente."
 
     # Create booking record
-    if not create_booking_record(booking_data, customer.id, selected_table_id, selected_start_time):
+    booking_id = create_booking_record(booking_data, customer.id, selected_table_id, selected_start_time)
+    if not booking_id:
         return False, "Error al crear la reserva."
 
     # Update availability
-    update_availability_slots(booking_data['date'], selected_table_id, selected_start_time)
+    update_availability_slots(booking_data['date'], selected_table_id, selected_start_time, booking_id, action="set")
 
     return True, "Reserva realizada con éxito."
-
-
-def check_and_select_available_timeslot(booking_data):
-    """Checks availability and returns the first available timeslot."""
-    available_times = check_availability(booking_data)
-    return available_times if available_times else None
 
 
 def get_or_create_customer(customer_data):
@@ -288,25 +317,46 @@ def create_booking_record(booking_data, customer_id, table_id, start_time):
     try:
         db.session.add(booking)
         db.session.commit()
-        return True
+        return booking.id  # Devolver el ID del booking creado
     except IntegrityError:
         db.session.rollback()
-        return False
+        return None
 
 
-def update_availability_slots(date_obj, table_id, start_time):
-    """Marks the selected timeslot and the next 5 consecutive slots as unavailable."""
+def update_availability_slots(date_obj, table_id, start_time, booking_id, action="set"):
+    """
+    Updates the availability of timeslots based on the action.
+
+    Args:
+        date_obj (date): The date of the reservation.
+        table_id (int): The table ID.
+        start_time (time): The starting time of the reservation.
+        booking_id (int): The ID of the booking.
+        action (str): Either 'set' to mark timeslots as unavailable or 'remove' to mark them as available.
+    """
+    # Calculamos los 6 slots consecutivos que deben ser actualizados
     slots_to_update = [
         (datetime.combine(datetime.today(), start_time) + timedelta(minutes=15 * i)).time()
         for i in range(6)
     ]
+
+    # Configurar parámetros según la acción
+    if action == "set":
+        update_data = {"is_available": False, "booking_id": booking_id}
+    elif action == "remove":
+        update_data = {"is_available": True, "booking_id": None}
+    else:
+        raise ValueError("Invalid action. Use 'set' or 'remove'.")
+
+    # Actualizamos los slots seleccionados
     TableAvailability.query.filter(
         TableAvailability.date == date_obj,
         TableAvailability.table_id == table_id,
         TableAvailability.time_slot.in_(slots_to_update)
-    ).update({"is_available": False}, synchronize_session='fetch')
-    db.session.commit()
+    ).update(update_data, synchronize_session='fetch')
 
+    # Confirmamos los cambios en la base de datos
+    db.session.commit()
 
 def get_future_bookings():
     """Obtiene todas las reservas futuras de la base de datos con estado activo."""
@@ -339,25 +389,3 @@ def set_status_false(booking_id):
     else:
         return "Reserva no encontrada", 404
 
-
-def release_table_availability(booking_id):
-    """Libera los registros de disponibilidad de la mesa ocupada por una reserva cancelada."""
-    booking = Booking.query.get(booking_id)
-
-    if not booking:
-        return "Reserva no encontrada", 404
-
-    # Supongamos que cada reserva ocupa un bloque de 2 horas
-    end_time = (datetime.combine(booking.date, booking.start_time) + timedelta(hours=TIEMPO_DE_RESERVA)).time()
-
-    table_availabilities = TableAvailability.query.filter_by(
-        date=booking.date,
-        table_id=booking.table_id
-    ).filter(
-        TableAvailability.time_slot.between(booking.start_time, end_time)
-    ).all()
-
-    for availability in table_availabilities:
-        availability.is_available = True  # Marcamos la disponibilidad como libre
-
-    db.session.commit()

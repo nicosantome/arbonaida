@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     // Añadir evento de clic a cada botón "Modificar"
     document.querySelectorAll('.edit-booking-btn').forEach(button => {
         button.addEventListener('click', () => {
@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const date = button.getAttribute('data-date');
             const location = button.getAttribute('data-location');
             const timeslot = button.getAttribute('data-timeslot');
-            console.log(timeslot)
 
             // Llamar a la función para abrir el modal y prellenar los datos
             openEditModal(bookingId, numPeople, date, location, timeslot);
@@ -23,7 +22,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
         editNumPeople.value = numPeople;
         editDate.value = date;
-
 
         // Actualizar el action del formulario con el bookingId
         const editForm = document.getElementById('editReservationForm');
@@ -46,11 +44,36 @@ document.addEventListener("DOMContentLoaded", function() {
         // Añadir EventListeners para actualizar los timeslots dinámicamente
         editNumPeople.addEventListener('change', () => updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot));
         editDate.addEventListener('change', () => updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot));
-        document.getElementById('edit-location').addEventListener('change', event => {
-    if (event.target.matches('input[type="radio"]')) {
-        updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot);
-    }
-});
+
+        // Manejo de los botones de ubicación en el modal
+        const modalLocationBtns = document.querySelectorAll('#edit-location .btn');
+        modalLocationBtns.forEach(button => {
+            button.addEventListener('click', function (event) {
+                // Prevenir comportamiento predeterminado
+                event.preventDefault();
+
+                // Remover la clase 'active' de todos los botones
+                modalLocationBtns.forEach(btn => btn.classList.remove('active'));
+
+                // Agregar la clase 'active' al botón seleccionado
+                this.classList.add('active');
+
+                // Marcar el radio correspondiente
+                const input = this.querySelector('input[type="radio"]');
+                if (input && !input.checked) {
+                    input.checked = true;
+                }
+
+                // Ejecutar `updateTimeslots` después de seleccionar la ubicación
+                updateTimeslots(
+                    bookingId,
+                    editDate.value,
+                    editNumPeople.value,
+                    getSelectedLocation(),
+                    timeslot
+                );
+            });
+        });
 
         // Abrir el modal
         const modal = new bootstrap.Modal(document.getElementById('editReservationModal'));
@@ -65,7 +88,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Función para actualizar los timeslots disponibles
     function updateTimeslots(bookingId, date, numPeople, location, currentTimeslot) {
-
         const timeslotSelect = document.getElementById('edit-timeslot');
         timeslotSelect.innerHTML = ''; // Limpiar opciones existentes
 
@@ -77,9 +99,6 @@ document.addEventListener("DOMContentLoaded", function() {
                         const option = document.createElement('option');
                         option.value = time.start_time;
                         option.textContent = time.start_time;
-                        console.log('time.start_time:', time.start_time, typeof time.start_time);
-                        console.log('currentTimeslot:', currentTimeslot, typeof currentTimeslot);
-
 
                         // Seleccionar el timeslot actual si coincide
                         if (time.start_time === currentTimeslot) {

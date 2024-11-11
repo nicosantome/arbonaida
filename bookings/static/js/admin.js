@@ -15,20 +15,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Función para abrir el modal de edición y prellenar los datos de la reserva
     function openEditModal(bookingId, numPeople, date, location, timeslot) {
-        // Establecer valores en el formulario del modal
+        const editForm = document.getElementById('editReservationForm');
         const editNumPeople = document.getElementById('edit-num-people');
         const editDate = document.getElementById('edit-date');
         const editTimeslot = document.getElementById('edit-timeslot');
 
+        // Configurar el action del formulario
+        editForm.action = `/admin/edit/${bookingId}`;
+
+        // Configurar valores predeterminados en el modal
         editNumPeople.value = numPeople;
         editDate.value = date;
 
-        // Actualizar el action del formulario con el bookingId
-        const editForm = document.getElementById('editReservationForm');
-        editForm.action = `/admin/edit/${bookingId}`;
-        editForm.setAttribute('data-booking-id', bookingId);
-
-        // Marcar la opción de ubicación seleccionada
         document.querySelectorAll('#edit-location input').forEach(radio => {
             if (radio.value === location) {
                 radio.checked = true;
@@ -39,45 +37,24 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // Llenar los timeslots disponibles
-        updateTimeslots(bookingId, editDate.value, editNumPeople.value, location, timeslot);
-
-        // Añadir EventListeners para actualizar los timeslots dinámicamente
-        editNumPeople.addEventListener('change', () => updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot));
-        editDate.addEventListener('change', () => updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot));
-
-        // Manejo de los botones de ubicación en el modal
-        const modalLocationBtns = document.querySelectorAll('#edit-location .btn');
-        modalLocationBtns.forEach(button => {
-            button.addEventListener('click', function (event) {
-                // Prevenir comportamiento predeterminado
-                event.preventDefault();
-
-                // Remover la clase 'active' de todos los botones
-                modalLocationBtns.forEach(btn => btn.classList.remove('active'));
-
-                // Agregar la clase 'active' al botón seleccionado
-                this.classList.add('active');
-
-                // Marcar el radio correspondiente
-                const input = this.querySelector('input[type="radio"]');
-                if (input && !input.checked) {
-                    input.checked = true;
-                }
-
-                // Ejecutar `updateTimeslots` después de seleccionar la ubicación
-                updateTimeslots(
-                    bookingId,
-                    editDate.value,
-                    editNumPeople.value,
-                    getSelectedLocation(),
-                    timeslot
-                );
-            });
-        });
+        updateTimeslots(bookingId, date, numPeople, location, timeslot);
 
         // Abrir el modal
         const modal = new bootstrap.Modal(document.getElementById('editReservationModal'));
         modal.show();
+
+        // Actualizar timeslots cuando cambien los valores
+        editNumPeople.addEventListener('change', () => {
+            updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot);
+        });
+        editDate.addEventListener('change', () => {
+            updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot);
+        });
+        document.querySelectorAll('#edit-location .btn').forEach(button => {
+            button.addEventListener('click', () => {
+                updateTimeslots(bookingId, editDate.value, editNumPeople.value, getSelectedLocation(), timeslot);
+            });
+        });
     }
 
     // Función para obtener el valor de ubicación seleccionado
@@ -89,24 +66,32 @@ document.addEventListener("DOMContentLoaded", function () {
     // Función para actualizar los timeslots disponibles
     function updateTimeslots(bookingId, date, numPeople, location, currentTimeslot) {
         const timeslotSelect = document.getElementById('edit-timeslot');
-        timeslotSelect.innerHTML = ''; // Limpiar opciones existentes
+        timeslotSelect.innerHTML = '';
 
         fetch(`/check_availability?date=${date}&num_people=${numPeople}&location=${location}&booking_id=${bookingId}`)
             .then(response => response.json())
             .then(data => {
                 if (Array.isArray(data.available_times) && data.available_times.length > 0) {
+                    let currentTimeslotAvailable = false;
+
                     data.available_times.forEach(time => {
                         const option = document.createElement('option');
                         option.value = time.start_time;
                         option.textContent = time.start_time;
 
-                        // Seleccionar el timeslot actual si coincide
+                        // Seleccionar el timeslot actual si está disponible
                         if (time.start_time === currentTimeslot) {
                             option.selected = true;
+                            currentTimeslotAvailable = true;
                         }
 
                         timeslotSelect.appendChild(option);
                     });
+
+                    // Si el timeslot actual no está disponible, selecciona el primero
+                    if (!currentTimeslotAvailable) {
+                        timeslotSelect.options[0].selected = true;
+                    }
                 } else {
                     const noTimeslotOption = document.createElement('option');
                     noTimeslotOption.textContent = 'No hay horarios disponibles';

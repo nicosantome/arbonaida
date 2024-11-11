@@ -59,39 +59,39 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form id="editReservationForm" method="POST">
-                        <div class="form-group">
-                            <label for="edit-num-people">Cantidad de Personas</label>
-                            <select class="form-control" id="edit-num-people" name="num_people">
-                                {% for i in range(2, 9) %}
-                                    <option value="{{ i }}">{{ i }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-date">Fecha</label>
-                            <input type="date" class="form-control" id="edit-date" name="date">
-                        </div>
-                        <div class="form-group">
-                            <label>Ubicación</label>
-                            <div class="btn-group btn-group-toggle" id="edit-location" data-toggle="buttons">
-                                <label class="btn btn-secondary">
-                                    <input type="radio" name="location" value="indoor" autocomplete="off"> Dentro
-                                </label>
-                                <label class="btn btn-secondary">
-                                    <input type="radio" name="location" value="outdoor" autocomplete="off"> Fuera
-                                </label>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="edit-timeslot">Horario</label>
-                            <select class="form-control" id="edit-timeslot" name="timeslot"></select>
-                        </div>
-                    </form>
+                  <form id="editReservationForm" method="POST">
+    <div class="form-group">
+        <label for="edit-num-people">Cantidad de personas</label>
+        <select class="form-control" id="edit-num-people" name="num_people">
+            {% for i in range(2, 9) %}
+                <option value="{{ i }}">{{ i }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="edit-date">Fecha</label>
+        <input type="date" class="form-control" id="edit-date" name="date">
+    </div>
+    <div class="form-group">
+        <label>Ubicación</label>
+        <div class="btn-group btn-group-toggle" id="edit-location" data-toggle="buttons">
+            <label class="btn btn-secondary">
+                <input type="radio" name="location" value="indoor"> Dentro
+            </label>
+            <label class="btn btn-secondary">
+                <input type="radio" name="location" value="outdoor"> Fuera
+            </label>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="edit-timeslot">Horario</label>
+        <select class="form-control" id="edit-timeslot" name="timeslot"></select>
+    </div>
+</form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary" form="editReservationForm">Guardar Cambios</button>
+                    <button type="submit" class="btn btn-primary" form="editReservationForm">Guardar cambios</button>
                 </div>
             </div>
         </div>

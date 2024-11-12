@@ -1,4 +1,3 @@
-//TODO When modifing a booking, after num people change, if not same timeslot avail, default to blank
 document.addEventListener("DOMContentLoaded", function () {
     // Añadir evento de clic a cada botón "Modificar"
     document.querySelectorAll('.edit-booking-btn').forEach(button => {
@@ -67,13 +66,20 @@ document.addEventListener("DOMContentLoaded", function () {
     // Función para actualizar los timeslots disponibles
     function updateTimeslots(bookingId, date, numPeople, location, currentTimeslot) {
         const timeslotSelect = document.getElementById('edit-timeslot');
-        timeslotSelect.innerHTML = '';
+        timeslotSelect.innerHTML = ''; // Limpiar opciones existentes
 
         fetch(`/check_availability?date=${date}&num_people=${numPeople}&location=${location}&booking_id=${bookingId}`)
             .then(response => response.json())
             .then(data => {
                 if (Array.isArray(data.available_times) && data.available_times.length > 0) {
                     let currentTimeslotAvailable = false;
+
+                    // Placeholder "Seleccionar"
+                    const placeholderOption = document.createElement('option');
+                    placeholderOption.value = '';
+                    placeholderOption.textContent = 'Seleccionar';
+                    placeholderOption.disabled = true;
+                    timeslotSelect.appendChild(placeholderOption);
 
                     data.available_times.forEach(time => {
                         const option = document.createElement('option');
@@ -89,11 +95,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         timeslotSelect.appendChild(option);
                     });
 
-                    // Si el timeslot actual no está disponible, selecciona el primero
+                    // Si el timeslot actual no está disponible, fuerza al usuario a seleccionar
                     if (!currentTimeslotAvailable) {
-                        timeslotSelect.options[0].selected = true;
+                        placeholderOption.selected = true;
                     }
                 } else {
+                    // Si no hay horarios disponibles
                     const noTimeslotOption = document.createElement('option');
                     noTimeslotOption.textContent = 'No hay horarios disponibles';
                     noTimeslotOption.disabled = true;

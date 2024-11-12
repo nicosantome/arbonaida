@@ -1,3 +1,4 @@
+//TODO When modifing a booking, after num people change, if not same timeslot avail, default to blank
 document.addEventListener("DOMContentLoaded", function () {
     // Añadir evento de clic a cada botón "Modificar"
     document.querySelectorAll('.edit-booking-btn').forEach(button => {

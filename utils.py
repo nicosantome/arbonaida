@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 from restaurant_config import OPENING_TIMES, INDOOR_CONFIGS, OUTDOOR_CONFIGS, CLOSED_DAYS, DEFAULT_RULES, EXCEPTION_RULES, TIEMPO_DE_RESERVA
 from bookings import create_app, db
 from bookings.models import TableAvailability, TableConfig, Customer, Booking
+from bookings.mail import send_email
+
 import json
 
 from sqlalchemy.exc import IntegrityError
@@ -282,6 +284,9 @@ def make_booking(booking_data, customer_data):
 
     # Update availability
     update_availability_slots(booking_data['date'], selected_table_id, selected_start_time, booking_id, action="set")
+
+    # Send confirmation email
+    send_email(customer_data['email'], customer_data['name'], booking_data['date'], booking_data['timeslot'])
 
     return True, "Reserva realizada con éxito."
 

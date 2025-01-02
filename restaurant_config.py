@@ -6,7 +6,7 @@ OPENING_DAYS = ['Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunda
 OPENING_TIMES = {
     'Tuesday': (time(13, 0), time(16, 0), time(19, 0), time(0, 0)),  # (lunch_start, lunch_end, dinner_start, dinner_end)
     'Wednesday': (time(13, 0), time(16, 0), time(19, 0), time(0, 0)),
-    'Thursday': (time(13, 0), time(16, 0), time(19, 0), time(0, 0)),
+    'Thursday': (time(13, 0), time(16, 0), time(16, 0), time(0, 0)),
     'Friday': (time(13, 0), time(16, 0), time(19, 0), time(1, 0)),
     'Saturday': (time(13, 0), time(16, 0), time(19, 0), time(1, 0)),
     'Sunday': (time(13, 0), time(17, 0), None, None)  # No hay cena
@@ -54,3 +54,8 @@ EXCEPTION_RULES = {
 }
 
 TIEMPO_DE_RESERVA = 1.5
+TIEMPO_RECORDATORIO = 0.5
+MOVILES_PERSONAL = {
+    'Sergio': '+34644246736',
+    'Emi': '+34644246736'
+}

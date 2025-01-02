@@ -64,7 +64,9 @@ def check_availability_route():
 @app.route('/admin', methods=['GET'])
 def admin():
     data = get_future_bookings()  # Llamar a la función para obtener las reservas futuras
+    print(data)
     for booking in data:
+        print(booking)
         # Convertir el string '13:00:00' a un formato '13:00'
         booking['time'] = booking['time'].strftime("%H:%M")
     return render_template('admin.html', data=data)

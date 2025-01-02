@@ -7,8 +7,8 @@ PASS = 'hryf oovm otdl gxuj'
 PORT = 465
 SERVER = 'smtp.gmail.com'
 
-email_sender = 'nicosantome@gmail.com'
-email_receiver = 'nicosantome@gmail.com'
+email_sender = 'email@gmail.com'
+email_receiver = 'email@gmail.com'
 
 context = ssl.create_default_context()
 

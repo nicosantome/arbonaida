@@ -1,9 +1,13 @@
 from datetime import datetime, timedelta
-from restaurant_config import OPENING_TIMES, INDOOR_CONFIGS, OUTDOOR_CONFIGS, CLOSED_DAYS, DEFAULT_RULES, EXCEPTION_RULES, TIEMPO_DE_RESERVA
+from celery.utils.time import maybe_make_aware
+from restaurant_config import OPENING_TIMES, INDOOR_CONFIGS, OUTDOOR_CONFIGS, CLOSED_DAYS, DEFAULT_RULES, \
+    EXCEPTION_RULES, TIEMPO_DE_RESERVA, MOVILES_PERSONAL, TIEMPO_RECORDATORIO
 from bookings import create_app, db
 from bookings.models import TableAvailability, TableConfig, Customer, Booking
 from bookings.mail import send_email
-
+from bookings.whatsapp import send_whatsapp_message, create_new_booking_template
+from bookings.tasks import enviar_recordatorio, printo
+from pytz import timezone
 import json
 
 from sqlalchemy.exc import IntegrityError
@@ -262,7 +266,15 @@ def ensure_availability_records(date_obj):
 
 
 def make_booking(booking_data, customer_data):
+    from celery import current_app
+
+    print("Scheduled tasks:")
+    print(current_app.tasks.keys())
     """Handles the end-to-end table booking process."""
+    print("Scheduling Celery task...")
+    test = printo.apply_async(countdown=10)
+    print(f"Task scheduled: {test.id}")
+
 
     # Check availability
     available_times = check_availability(booking_data, booking_id=None)
@@ -286,7 +298,26 @@ def make_booking(booking_data, customer_data):
     update_availability_slots(booking_data['date'], selected_table_id, selected_start_time, booking_id, action="set")
 
     # Send confirmation email
-    send_email(customer_data['email'], customer_data['name'], booking_data['date'], booking_data['timeslot'])
+    # send_email(customer_data['email'], customer_data['name'], booking_data['date'], booking_data['timeslot'])
+
+    # Send new booking whatsapp
+    new_bkg_template = create_new_booking_template(booking_data, customer_data['name'])
+    send_whatsapp_message(new_bkg_template)
+
+    # Programar recordatorio
+    booking = Booking.query.get(booking_id)  # Obtener la reserva creada
+    print('booking_data:', booking_data)
+    # programar_recordatorio(booking_data, booking)
+    print(booking_id)
+    # En la parte que llama a la tarea:
+    result = enviar_recordatorio.apply_async(args=[booking_id], countdown=10)
+    if result:
+        print(f"Tarea programada: {result.id}")
+    else:
+        print("Error al programar la tarea.")
+
+
+
 
     return True, "Reserva realizada con éxito."
 
@@ -363,6 +394,7 @@ def update_availability_slots(date_obj, table_id, start_time, booking_id, action
     # Confirmamos los cambios en la base de datos
     db.session.commit()
 
+
 def get_future_bookings():
     """Obtiene todas las reservas futuras de la base de datos con estado activo."""
     current_date = datetime.now().date()
@@ -382,7 +414,6 @@ def get_future_bookings():
             'location': booking.location
         })
     print(booking_data)
-
     return booking_data
 
 
@@ -394,3 +425,42 @@ def set_status_false(booking_id):
     else:
         return "Reserva no encontrada", 404
 
+
+def tiempo_recordatorio(booking_data):
+    """
+    Calcula el tiempo de envío del recordatorio basado en el tiempo de reserva
+    ajustado a la zona horaria "Europe/Madrid".
+    """
+    # Combina la fecha y la hora de la reserva y ajusta la zona horaria
+    reserva_datetime = datetime.combine(
+        booking_data['date'], booking_data['timeslot']
+    )
+    # Ajustar la zona horaria a Europe/Madrid
+    reserva_datetime = timezone("Europe/Madrid").localize(reserva_datetime)
+
+    # Resta el tiempo de recordatorio
+    return reserva_datetime - timedelta(hours=TIEMPO_RECORDATORIO)
+
+
+# def programar_recordatorio(booking_data, booking):
+#     """
+#     Programa un recordatorio de reserva para el cliente en la zona horaria local.
+#     """
+#     # Calcular la hora del recordatorio
+#     recordatorio_datetime = tiempo_recordatorio(booking_data)
+#     print(f"ETA para el recordatorio: {recordatorio_datetime}")
+#
+#     # Obtener la hora actual en la misma zona horaria
+#     now = datetime.now(timezone("Europe/Madrid"))
+#
+#
+#     # Asegurarse de que el recordatorio esté en el futuro
+#     if recordatorio_datetime > now:
+#         task = enviar_recordatorio.apply_async(
+#             (booking_data), eta=recordatorio_datetime
+#         )
+#         booking.task_id = task.id  # Guardar el task_id en la reserva
+#         db.session.commit()
+#         print(f"Tarea programada con ID: {task.id}")
+#     else:
+#         print("No se puede programar el recordatorio porque el tiempo ya pasó.")

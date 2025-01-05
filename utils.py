@@ -266,16 +266,6 @@ def ensure_availability_records(date_obj):
 
 
 def make_booking(booking_data, customer_data):
-    from celery import current_app
-
-    print("Scheduled tasks:")
-    print(current_app.tasks.keys())
-    """Handles the end-to-end table booking process."""
-    print("Scheduling Celery task...")
-    test = printo.apply_async(countdown=10)
-    print(f"Task scheduled: {test.id}")
-
-
     # Check availability
     available_times = check_availability(booking_data, booking_id=None)
     if not available_times:
@@ -310,14 +300,11 @@ def make_booking(booking_data, customer_data):
     # programar_recordatorio(booking_data, booking)
     print(booking_id)
     # En la parte que llama a la tarea:
-    result = enviar_recordatorio.apply_async(args=[booking_id], countdown=10)
-    if result:
-        print(f"Tarea programada: {result.id}")
-    else:
-        print("Error al programar la tarea.")
-
-
-
+    # result = enviar_recordatorio.apply_async(args=[booking_id], countdown=10)
+    # if result:
+    #     print(f"Tarea programada: {result.id}")
+    # else:
+    #     print("Error al programar la tarea.")
 
     return True, "Reserva realizada con éxito."
 

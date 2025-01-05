@@ -8,99 +8,100 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="mb-4">Admin Panel - Próximas Reservas</h1>
-        <table class="table table-striped">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Cliente</th>
-                    <th>Número de Personas</th>
-                    <th>Ubicación</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for booking in data %}
-                    <tr>
-                        <td>{{ booking.date }}</td>
-                        <td>{{ booking.time }}</td>
-                        <td>{{ booking.customer_name }}</td>
-                        <td>{{ booking.num_people }}</td>
-                        <td>{{ booking.location }}</td>
-                        <td>
-                            <button class="btn btn-warning edit-booking-btn"
-                                    data-booking-id="{{ booking.id }}"
-                                    data-num-people="{{ booking.num_people }}"
-                                    data-date="{{ booking.date }}"
-                                    data-location="{{ booking.location }}"
-                                    data-timeslot="{{ booking.time }}">
-                                Modificar
-                            </button>
-                            <button onclick="location.href='/admin/cancel/{{ booking.id }}'" class="btn btn-danger">
-                                Cancelar
-                            </button>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="container mt-4">
+    <h1 class="mb-4">Admin Panel - Next bookings</h1>
+    <table class="table table-striped">
+        <thead class="thead-dark">
+        <tr>
+            <th>Date</th>
+            <th>Time</th>
+            <th>Client</th>
+            <th>Num people</th>
+            <th>Location</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for booking in data %}
+        <tr>
+            <td>{{ booking.date }}</td>
+            <td>{{ booking.time }}</td>
+            <td>{{ booking.customer_name }}</td>
+            <td>{{ booking.num_people }}</td>
+            <td>{{ booking.location }}</td>
+            <td>
+                <button class="btn btn-warning edit-booking-btn"
+                        data-booking-id="{{ booking.id }}"
+                        data-num-people="{{ booking.num_people }}"
+                        data-date="{{ booking.date }}"
+                        data-location="{{ booking.location }}"
+                        data-timeslot="{{ booking.time }}">
+                    Modify
+                </button>
+                <button onclick="location.href='/admin/cancel/{{ booking.id }}'" class="btn btn-danger">
+                    Cancel
+                </button>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
 
-    <!-- Modal para editar reserva -->
-    <div class="modal fade" id="editReservationModal" tabindex="-1" aria-labelledby="editReservationModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editReservationModalLabel">Modificar Reserva</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                  <form id="editReservationForm" method="POST">
-    <div class="form-group">
-        <label for="edit-num-people">Cantidad de personas</label>
-        <select class="form-control" id="edit-num-people" name="num_people">
-            {% for i in range(2, 9) %}
-                <option value="{{ i }}">{{ i }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="edit-date">Fecha</label>
-        <input type="date" class="form-control" id="edit-date" name="date">
-    </div>
-    <div class="form-group">
-        <label>Ubicación</label>
-        <div class="btn-group btn-group-toggle" id="edit-location" data-toggle="buttons">
-            <label class="btn btn-secondary">
-                <input type="radio" name="location" value="indoor"> Dentro
-            </label>
-            <label class="btn btn-secondary">
-                <input type="radio" name="location" value="outdoor"> Fuera
-            </label>
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="edit-timeslot">Horario</label>
-        <select class="form-control" id="edit-timeslot" name="timeslot"></select>
-    </div>
-</form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary" form="editReservationForm">Guardar cambios</button>
-                </div>
+<!-- Modal to edit the booking -->
+<div class="modal fade" id="editReservationModal" tabindex="-1" aria-labelledby="editReservationModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editReservationModalLabel">Modify booking</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editReservationForm" method="POST">
+                    <div class="form-group">
+                        <label for="edit-num-people">Num pepople</label>
+                        <select class="form-control" id="edit-num-people" name="num_people">
+                            {% for i in range(2, 9) %}
+                            <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-date">Date</label>
+                        <input type="date" class="form-control" id="edit-date" name="date">
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <div class="btn-group btn-group-toggle" id="edit-location" data-toggle="buttons">
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="location" value="indoor"> Indoor
+                            </label>
+                            <label class="btn btn-secondary">
+                                <input type="radio" name="location" value="outdoor"> Outdoor
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-timeslot">Time</label>
+                        <select class="form-control" id="edit-timeslot" name="timeslot"></select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                <button type="submit" class="btn btn-primary" form="editReservationForm">Guardar cambios</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 </body>
 </html>

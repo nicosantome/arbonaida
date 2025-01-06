@@ -11,7 +11,7 @@ def home():
     form = ReservationForm()
 
     if form.validate_on_submit():
-        # Extraer datos del formulario
+        # Extracts data from the form
         date_str = form.date.data.strftime('%Y-%m-%d')
         booking_data = {
             'date': datetime.strptime(date_str, '%Y-%m-%d').date(),
@@ -19,17 +19,17 @@ def home():
             'num_people': int(form.num_people.data),
             'location': form.location.data
         }
-        # Información del cliente
+
         customer_data = {
             'name': form.name.data,
             'phone': form.phone.data,
             'email': form.email.data
         }
-        # Hacer la reserva
+        # Mak the booking
         success, message = make_booking(booking_data, customer_data)
 
         if success:
-            flash('Reserva confirmada con éxito.')
+            flash('Booking confirmed.')
         else:
             flash(message)
 
@@ -49,7 +49,7 @@ def check_availability_route():
 
     available_times = check_availability(booking_data, request.args.get('booking_id'))
 
-    # Convertir objetos de tiempo a cadena 'HH:MM'
+    # Convert time objects in serializable strings 'HH:MM'
     available_times_serializable = [
         {
             'start_time': time_data['start_time'].strftime('%H:%M'),
@@ -63,18 +63,16 @@ def check_availability_route():
 
 @app.route('/admin', methods=['GET'])
 def admin():
-    data = get_future_bookings()  # Llamar a la función para obtener las reservas futuras
-    print(data)
+    data = get_future_bookings()  # Get future bookings
     for booking in data:
-        print(booking)
-        # Convertir el string '13:00:00' a un formato '13:00'
+        # Convert string '13:00:00' to '13:00'
         booking['time'] = booking['time'].strftime("%H:%M")
     return render_template('admin.html', data=data)
 
 
 @app.route('/admin/cancel/<int:booking_id>', methods=['POST'])
 def cancel_booking(booking_id):
-    """Ruta para cancelar una reserva."""
+    """Rout to cancel a booking."""
     booking = Booking.query.get_or_404(booking_id)
     set_status_false(booking_id)
     update_availability_slots(booking.date, booking.table_id, booking.start_time, booking_id, action="remove")
@@ -84,19 +82,19 @@ def cancel_booking(booking_id):
 
 @app.route('/admin/edit/<int:booking_id>', methods=['POST'])
 def edit_booking(booking_id):
-    # Obtener la reserva a modificar
+    """Route to edit an existing booking."""
     booking = Booking.query.get_or_404(booking_id)
 
     try:
         update_availability_slots(booking.date, booking.table_id, booking.start_time, booking_id, action="remove")
-        # Convertir la fecha del formulario a un objeto de tipo date
+        # Convert the form date to an date object
         new_date = datetime.strptime(request.form['date'], '%Y-%m-%d').date()
         new_time = datetime.strptime(request.form[
             'timeslot'], '%H:%M').time()
         new_num_people = int(request.form['num_people'])
         new_location = request.form['location']
 
-        # Actualizar la reserva con los nuevos valores
+        # Update booking with new values
         booking.date = new_date
         booking.start_time = new_time
         booking.num_people = new_num_people
@@ -111,19 +109,19 @@ def edit_booking(booking_id):
 
         available_times = check_availability(booking_data, booking_id)
         if not available_times:
-            return False, "No hay mesas disponibles para el horario solicitado."
+            return False, "No availability for the requested time."
 
         selected_table_id = available_times[0]['table_id']
 
         # Update availability
         update_availability_slots(booking.date, selected_table_id, booking.start_time, booking_id, action="set")
 
-        # Guardar los cambios en la base de datos
+        # Save changees in database
         db.session.commit()
-        flash('Reserva modificada exitosamente', 'success')
-        return redirect(url_for('admin'))  # Cambia 'admin_panel' por tu endpoint de vista deseado
+        flash('Booking succesfully updated', 'success')
+        return redirect(url_for('admin'))
 
     except Exception as e:
         db.session.rollback()
-        flash(f'Error al modificar la reserva: {str(e)}', 'danger')
+        flash(f'Unable to modify booking: {str(e)}', 'danger')
         return redirect(url_for('admin'))

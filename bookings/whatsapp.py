@@ -16,22 +16,22 @@ def send_whatsapp_message(template_object):
     }
 
     # Preparar datos comunes
-    template_name = template_object.get("template_name")  # Nombre del template
-    parameters = template_object.get("parameters")  # Lista de parámetros dinámicos
+    template_name = template_object.get("template_name")
+    parameters = template_object.get("parameters")
 
-    # Verificar si es a un único destinatario o múltiples
+    # Verifies if only one recipient or multiple recipients
     recipients = template_object.get("to_list") or [template_object.get("to")]
 
     for recipient in recipients:
-        if template_name == "nueva_reserva":
+        if template_name == "nueva_reserva": # new booking
             payload = {
                 "messaging_product": "whatsapp",
-                "to": recipient,  # Destinatario
+                "to": recipient,
                 "type": "template",
                 "template": {
                     "name": template_name,
                     "language": {
-                        "code": "es_ES"  # Cambiar al idioma adecuado
+                        "code": "es_ES"
                     },
                     "components": [
                         {
@@ -41,10 +41,10 @@ def send_whatsapp_message(template_object):
                     ]
                 }
             }
-        elif template_name == "recordatorio_cliente":
+        elif template_name == "recordatorio_cliente": # reminder to client
             payload = {
                 "messaging_product": "whatsapp",
-                "to": recipient,  # Destinatario
+                "to": recipient,
                 "type": "template",
                 "template": {
                     "name": template_name,
@@ -64,9 +64,9 @@ def send_whatsapp_message(template_object):
         response = requests.post(url, headers=headers, json=payload)
 
         if response.status_code == 200:
-            print(f"Mensaje enviado exitosamente a {recipient}!")
+            print(f"Succesfully sent to {recipient}!")
         else:
-            print(f"Error al enviar el mensaje a {recipient}: {response.status_code}")
+            print(f"Fail to send to {recipient}: {response.status_code}")
             print(response.text)
 
 
@@ -80,35 +80,35 @@ def generate_booking_string(booking_data, name):
 
 
 def create_new_booking_template(booking_data, name):
+    # This will generate the object that will be used for the new booking whatsapp message
     booking_string = generate_booking_string(booking_data, name)
     booking_count = db.session.query(func.count(Booking.id)).filter(Booking.date == booking_data['date']).scalar()
     nueva_reserva = {
         "template_name": "nueva_reserva",
-        "to_list": list(MOVILES_PERSONAL.values()),  # Números del personal
-        "parameters": [format_date(booking_data['date'], format="EEEE d MMM", locale="es_ES").capitalize(), booking_string, booking_count]  # Detalles de la nueva reserva y resumen del día
+        "to_list": list(MOVILES_PERSONAL.values()),  # Staff movile numbers
+        "parameters": [format_date(booking_data['date'], format="EEEE d MMM", locale="es_ES").capitalize(), booking_string, booking_count]
     }
     return nueva_reserva
 
 
 def create_recordatorio_cliente_template(booking_id):
-    # Obtener los datos del cliente relacionados con la reserva
+    # This will generate the object that will be used for the client reminder whatsapp message
     booking = db.session.query(Booking).filter(Booking.id == booking_id).first()
 
     if not booking:
         raise ValueError(f"No se encontró una reserva con el ID {booking_id}")
 
-    customer = booking.customer  # Relación entre Booking y Customer
+    customer = booking.customer
 
     if not customer:
         raise ValueError(f"No se encontró un cliente asociado a la reserva con ID {booking_id}")
 
-    # Crear el objeto de recordatorio
     recordatorio_cliente = {
         "template_name": "recordatorio_cliente",
-        "to": customer.phone,  # Número de teléfono del cliente
+        "to": customer.phone,
         "parameters": [
-            customer.name,  # Nombre del cliente
-            booking.start_time.strftime('%H:%M'),  # Hora de la reserva
+            customer.name,
+            booking.start_time.strftime('%H:%M'),
         ]
     }
 

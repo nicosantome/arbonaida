@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 
 
 def is_closed(target_date):
-    """Verifica si el restaurante está cerrado en la fecha dada."""
+    """Check if the restaurant is closed on the given date."""
     for period in CLOSED_DAYS:
         if period['start_date'] <= target_date <= period['end_date']:
             return True
@@ -23,36 +23,37 @@ def is_closed(target_date):
 
 def generate_time_slots(start_time, end_time=None, num_intervals=6):
     """
-    Genera intervalos de tiempo de 15 minutos entre dos horas o una cantidad específica de intervalos a partir de un solo `start_time`.
+    Generate 15-minute time intervals between two times or a specific number of intervals from a single start_time.
 
-    - Si se proporciona solo `start_time`, genera `num_intervals` intervalos de 15 minutos desde `start_time`.
-    - Si se proporcionan ambos `start_time` y `end_time`, genera intervalos de 15 minutos entre esas horas.
+    - If only start_time is provided, generates num_intervals of 15-minute intervals from start_time.
+    - If both start_time and end_time are provided, generates 15-minute intervals between those times.
     """
     time_slots = []
     current_datetime = datetime.combine(datetime.today(), start_time)
 
-    # Si se proporciona end_time, genera hasta end_time
+    # If end_time is provided, generate until end_time
     if end_time:
         end_datetime = datetime.combine(datetime.today(), end_time)
 
-        # Ajustar si el periodo cruza la medianoche
+        # Adjust if the period crosses midnight
         if end_time <= start_time:
             end_datetime += timedelta(days=1)
 
         while current_datetime < end_datetime:
-            time_slots.append(current_datetime.time())  # Guardar como objeto time
+            time_slots.append(current_datetime.time())  # Store as time object
             current_datetime += timedelta(minutes=15)
 
-    # Si no se proporciona end_time, genera `num_intervals` intervalos de 15 minutos desde `start_time`
+    # If end_time is not provided, generate num_intervals of 15-minute intervals from start_time
     else:
         for _ in range(num_intervals):
-            time_slots.append(current_datetime.time())  # Guardar como objeto time
+            time_slots.append(current_datetime.time())  # Store as time object
             current_datetime += timedelta(minutes=15)
 
     return time_slots
 
 
 def create_availability_records(date_obj):
+    """Create availability records for a given date if the restaurant is open."""
     if is_closed(date_obj):
         return
 
@@ -68,19 +69,19 @@ def create_availability_records(date_obj):
 
 
 def process_shift(date_obj, shift, start_time, end_time):
-    """Función auxiliar para procesar un turno específico (almuerzo o cena)."""
-    # Creamos franjas horarias de 15 minutos para el período dado
-    time_slots = generate_time_slots(start_time, end_time)  # Ahora devuelve objetos `datetime.time`
-    config_index = 0  # Aquí puedes seleccionar la configuración correcta
+    """Helper function to process a specific shift (lunch or dinner)."""
+    # Create 15-minute time slots for the given period
+    time_slots = generate_time_slots(start_time, end_time)  # Now returns datetime.time objects
+    config_index = 0  # Here you can select the correct configuration
 
     indoor_config = INDOOR_CONFIGS[config_index]
     outdoor_config = OUTDOOR_CONFIGS[config_index]
 
-    # Generamos las tablas de acuerdo con el turno y ubicación
+    # Generate tables according to shift and location
     indoor_tables = generate_table_ids(indoor_config, 'indoor')
     outdoor_tables = generate_table_ids(outdoor_config, 'outdoor')
 
-    # Procesamos cada mesa y cada franja horaria
+    # Process each table and each time slot
     for table_id in indoor_tables + outdoor_tables:
         for slot in time_slots:
             availability_record = TableAvailability(
@@ -91,7 +92,7 @@ def process_shift(date_obj, shift, start_time, end_time):
             )
             db.session.add(availability_record)
 
-    # Registro de la configuración utilizada para la fecha y turno
+    # Record the configuration used for the date and shift
     indoor_config_record = TableConfig(
         date=date_obj,
         shift=shift,
@@ -111,8 +112,8 @@ def process_shift(date_obj, shift, start_time, end_time):
     db.session.add(outdoor_config_record)
 
 
-
 def generate_table_ids(config, location):
+    """Generate table IDs based on the configuration and location."""
     table_ids = []
     for table_type, count in config.items():
         for i in range(count):
@@ -125,13 +126,14 @@ def generate_table_ids(config, location):
 
 
 def get_reservation_rules(date_obj):
+    """Get reservation rules for a specific date, falling back to default rules if not specified."""
     if date_obj in EXCEPTION_RULES:
         return EXCEPTION_RULES[date_obj]
     return DEFAULT_RULES
 
 
 def check_availability(booking_data, booking_id=None):
-    """Función principal para verificar la disponibilidad de mesas."""
+    """Main function to check table availability."""
 
     app = create_app()
     with app.app_context():
@@ -144,7 +146,7 @@ def check_availability(booking_data, booking_id=None):
         table_slots = organize_time_slots_by_table(available_timeslots_query)
         available_start_times = find_valid_start_times(table_slots)
         if booking_data.get('timeslot'):
-            # Filtrar los horarios disponibles que coincidan con el 'timeslot' solicitado
+            # Filter available times that match the requested timeslot
             matched_times = [
                 time for time in available_start_times
                 if time['start_time'] == booking_data['timeslot']
@@ -155,7 +157,7 @@ def check_availability(booking_data, booking_id=None):
 
 
 def get_valid_table_types(num_people, reservation_rules):
-    """Obtiene los tipos de mesa válidos que pueden aceptar la cantidad de personas."""
+    """Get valid table types that can accommodate the given number of people."""
     return [
         table_type for table_type, rule in reservation_rules.items()
         if rule['min_accept'] <= num_people <= rule['max_accept']
@@ -163,10 +165,10 @@ def get_valid_table_types(num_people, reservation_rules):
 
 
 def query_available_timeslots(date_obj, location, valid_table_types, booking_id):
-    """Consulta la base de datos para obtener los timeslots disponibles según la ubicación y tipos de mesa."""
+    """Query the database for available timeslots based on location and table types."""
     if location == 'outdoor':
         if booking_id is None:
-            # Cuando no hay booking_id, buscamos únicamente los disponibles
+            # When there's no booking_id, we only look for available slots
             return TableAvailability.query.filter(
                 TableAvailability.date == date_obj,
                 TableAvailability.is_available == True,
@@ -174,7 +176,7 @@ def query_available_timeslots(date_obj, location, valid_table_types, booking_id)
                 TableAvailability.table_id.endswith('_O')
             ).all()
         else:
-            # Cuando hay booking_id, buscamos disponibles + ocupados por el mismo booking_id
+            # When there's a booking_id, we look for available slots + those occupied by the same booking_id
             return TableAvailability.query.filter(
                 TableAvailability.date == date_obj,
                 db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
@@ -190,7 +192,7 @@ def query_available_timeslots(date_obj, location, valid_table_types, booking_id)
             ).all()
     else:
         if booking_id is None:
-            # Cuando no hay booking_id, buscamos únicamente los disponibles
+            # When there's no booking_id, we only look for available slots
             return TableAvailability.query.filter(
                 TableAvailability.date == date_obj,
                 TableAvailability.is_available == True,
@@ -198,7 +200,7 @@ def query_available_timeslots(date_obj, location, valid_table_types, booking_id)
                 ~TableAvailability.table_id.endswith('_O')
             ).all()
         else:
-            # Cuando hay booking_id, buscamos disponibles + ocupados por el mismo booking_id
+            # When there's a booking_id, we look for available slots + those occupied by the same booking_id
             return TableAvailability.query.filter(
                 TableAvailability.date == date_obj,
                 db.func.substring(TableAvailability.table_id, 1, 2).in_(valid_table_types),
@@ -215,7 +217,7 @@ def query_available_timeslots(date_obj, location, valid_table_types, booking_id)
 
 
 def organize_time_slots_by_table(available_timeslots_query):
-    """Organiza los timeslots disponibles por ID de mesa."""
+    """Organize available time slots by table ID."""
     table_slots = {}
     for table in available_timeslots_query:
         if table.table_id not in table_slots:
@@ -225,12 +227,12 @@ def organize_time_slots_by_table(available_timeslots_query):
 
 
 def find_valid_start_times(table_slots):
-    """Encuentra los start times válidos para las mesas disponibles."""
+    """Find valid start times for available tables."""
     available_start_times = []
     start_times_checked = set()
 
     for table_id, slots in table_slots.items():
-        for i in range(len(slots) - 5):  # Iterar hasta la penúltima secuencia de 6 intervalos
+        for i in range(len(slots) - 5):  # Iterate up to the penultimate sequence of 6 intervals
             consecutive_slots = slots[i:i + 6]
             start_time = consecutive_slots[0]
 
@@ -241,16 +243,16 @@ def find_valid_start_times(table_slots):
                 })
                 start_times_checked.add(start_time)
 
-    available_start_times.sort(key=lambda x: x['start_time'])  # Ya no se necesita convertir a str
+    available_start_times.sort(key=lambda x: x['start_time'])  # No need to convert to str anymore
     return available_start_times
 
 
 def is_valid_start_time(time_slots):
-    """Verifica si los time_slots son consecutivos en intervalos de 15 minutos."""
+    """Check if the time slots are consecutive in 15-minute intervals."""
     start_time = datetime.combine(datetime.today(), time_slots[0])
     end_time = datetime.combine(datetime.today(), time_slots[5])
 
-    # Ajuste si cruza medianoche
+    # Adjust if crossing midnight
     if end_time < start_time:
         end_time += timedelta(days=1)
 
@@ -258,6 +260,7 @@ def is_valid_start_time(time_slots):
 
 
 def ensure_availability_records(date_obj):
+    """Ensure availability records exist for the given date."""
     app = create_app()
     with app.app_context():
         existing_records = TableAvailability.query.filter_by(date=date_obj).first()
@@ -266,10 +269,11 @@ def ensure_availability_records(date_obj):
 
 
 def make_booking(booking_data, customer_data):
+    """Main function to create a booking."""
     # Check availability
     available_times = check_availability(booking_data, booking_id=None)
     if not available_times:
-        return False, "No hay mesas disponibles para el horario solicitado."
+        return False, "No tables available for the requested time."
 
     selected_table_id = available_times[0]['table_id']
     selected_start_time = booking_data['timeslot']
@@ -277,36 +281,36 @@ def make_booking(booking_data, customer_data):
     # Retrieve or create customer
     customer = get_or_create_customer(customer_data)
     if not customer:
-        return False, "Error al registrar el cliente."
+        return False, "Error registering the customer."
 
     # Create booking record
     booking_id = create_booking_record(booking_data, customer.id, selected_table_id, selected_start_time)
     if not booking_id:
-        return False, "Error al crear la reserva."
+        return False, "Error creating the reservation."
 
     # Update availability
     update_availability_slots(booking_data['date'], selected_table_id, selected_start_time, booking_id, action="set")
 
-    # Send confirmation email
+    # Send confirmation email (commented out)
     # send_email(customer_data['email'], customer_data['name'], booking_data['date'], booking_data['timeslot'])
 
-    # Send new booking whatsapp
+    # Send new booking WhatsApp message
     new_bkg_template = create_new_booking_template(booking_data, customer_data['name'])
     send_whatsapp_message(new_bkg_template)
 
-    # Programar recordatorio
-    booking = Booking.query.get(booking_id)  # Obtener la reserva creada
+    # Schedule reminder (commented out)
+    booking = Booking.query.get(booking_id)  # Get the created booking
     print('booking_data:', booking_data)
     # programar_recordatorio(booking_data, booking)
     print(booking_id)
-    # En la parte que llama a la tarea:
+    # In the part that calls the task:
     # result = enviar_recordatorio.apply_async(args=[booking_id], countdown=10)
     # if result:
-    #     print(f"Tarea programada: {result.id}")
+    #     print(f"Task scheduled: {result.id}")
     # else:
-    #     print("Error al programar la tarea.")
+    #     print("Error scheduling the task.")
 
-    return True, "Reserva realizada con éxito."
+    return True, "Reservation made successfully."
 
 
 def get_or_create_customer(customer_data):
@@ -340,7 +344,7 @@ def create_booking_record(booking_data, customer_id, table_id, start_time):
     try:
         db.session.add(booking)
         db.session.commit()
-        return booking.id  # Devolver el ID del booking creado
+        return booking.id
     except IntegrityError:
         db.session.rollback()
         return None
@@ -357,13 +361,13 @@ def update_availability_slots(date_obj, table_id, start_time, booking_id, action
         booking_id (int): The ID of the booking.
         action (str): Either 'set' to mark timeslots as unavailable or 'remove' to mark them as available.
     """
-    # Calculamos los 6 slots consecutivos que deben ser actualizados
+    # Calculate the 6 consecutive slots that need to be updated
     slots_to_update = [
         (datetime.combine(datetime.today(), start_time) + timedelta(minutes=15 * i)).time()
         for i in range(6)
     ]
 
-    # Configurar parámetros según la acción
+    # Configure parameters based on the action
     if action == "set":
         update_data = {"is_available": False, "booking_id": booking_id}
     elif action == "remove":
@@ -371,19 +375,19 @@ def update_availability_slots(date_obj, table_id, start_time, booking_id, action
     else:
         raise ValueError("Invalid action. Use 'set' or 'remove'.")
 
-    # Actualizamos los slots seleccionados
+    # Update the selected slots
     TableAvailability.query.filter(
         TableAvailability.date == date_obj,
         TableAvailability.table_id == table_id,
         TableAvailability.time_slot.in_(slots_to_update)
     ).update(update_data, synchronize_session='fetch')
 
-    # Confirmamos los cambios en la base de datos
+    # Commit changes to the database
     db.session.commit()
 
 
 def get_future_bookings():
-    """Obtiene todas las reservas futuras de la base de datos con estado activo."""
+    """Retrieves all future active bookings from the database."""
     current_date = datetime.now().date()
     bookings = Booking.query.join(Customer).filter(
         Booking.date >= current_date,
@@ -395,8 +399,8 @@ def get_future_bookings():
         booking_data.append({
             'id': booking.id,
             'date': booking.date,
-            'time': booking.start_time,  # Asegúrate de que el atributo es correcto
-            'customer_name': booking.customer.name,  # Relación con Customer
+            'time': booking.start_time,  # Ensure this attribute is correct
+            'customer_name': booking.customer.name,  # Relationship with Customer
             'num_people': booking.num_people,
             'location': booking.location
         })
@@ -405,49 +409,50 @@ def get_future_bookings():
 
 
 def set_status_false(booking_id):
+    """Sets the status of a booking to False (cancelled)."""
     booking = Booking.query.get(booking_id)
     if booking:
-        booking.status = False  # Cambiar el estado de la reserva a cancelado
+        booking.status = False  # Change the booking status to cancelled
         db.session.commit()
     else:
-        return "Reserva no encontrada", 404
+        return "Booking not found", 404
 
 
 def tiempo_recordatorio(booking_data):
     """
-    Calcula el tiempo de envío del recordatorio basado en el tiempo de reserva
-    ajustado a la zona horaria "Europe/Madrid".
+    Calculates the reminder send time based on the booking time
+    adjusted to the "Europe/Madrid" timezone.
     """
-    # Combina la fecha y la hora de la reserva y ajusta la zona horaria
+    # Combine the date and time of the booking and adjust the timezone
     reserva_datetime = datetime.combine(
         booking_data['date'], booking_data['timeslot']
     )
-    # Ajustar la zona horaria a Europe/Madrid
+    # Adjust the timezone to Europe/Madrid
     reserva_datetime = timezone("Europe/Madrid").localize(reserva_datetime)
 
-    # Resta el tiempo de recordatorio
+    # Subtract the reminder time
     return reserva_datetime - timedelta(hours=TIEMPO_RECORDATORIO)
 
 
 # def programar_recordatorio(booking_data, booking):
 #     """
-#     Programa un recordatorio de reserva para el cliente en la zona horaria local.
+#     Schedules a booking reminder for the customer in the local timezone.
 #     """
-#     # Calcular la hora del recordatorio
+#     # Calculate the reminder time
 #     recordatorio_datetime = tiempo_recordatorio(booking_data)
-#     print(f"ETA para el recordatorio: {recordatorio_datetime}")
+#     print(f"ETA for the reminder: {recordatorio_datetime}")
 #
-#     # Obtener la hora actual en la misma zona horaria
+#     # Get the current time in the same timezone
 #     now = datetime.now(timezone("Europe/Madrid"))
 #
 #
-#     # Asegurarse de que el recordatorio esté en el futuro
+#     # Ensure the reminder is in the future
 #     if recordatorio_datetime > now:
 #         task = enviar_recordatorio.apply_async(
 #             (booking_data), eta=recordatorio_datetime
 #         )
-#         booking.task_id = task.id  # Guardar el task_id en la reserva
+#         booking.task_id = task.id  # Save the task_id in the booking
 #         db.session.commit()
-#         print(f"Tarea programada con ID: {task.id}")
+#         print(f"Task scheduled with ID: {task.id}")
 #     else:
-#         print("No se puede programar el recordatorio porque el tiempo ya pasó.")
+#         print("Cannot schedule the reminder because the time has already passed.")
